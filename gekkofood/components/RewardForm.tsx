@@ -22,7 +22,7 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
     e.preventDefault();
     setError(null);
     if (!name.trim()) return setError("Escribe tu nombre.");
-    if (!address.trim()) return setError("Escribe tu dirección o referencia de entrega.");
+    if (!address.trim()) return setError("Escribe dónde te encontramos en ESAN.");
     if (choice === "chaufa" && !itemId) return setError("Elige la pieza de tu broaster.");
 
     setLoading(true);
@@ -46,7 +46,7 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
       <div className="card p-6 text-center anim-modal">
         <p className="text-5xl">🎁</p>
         <h2 className="mt-2 text-2xl font-extrabold">¡Regalo pedido! N.º {done.orderNo}</h2>
-        <p className="mt-2 text-sm text-ink/70">{done.label}. Avísanos por WhatsApp para coordinar la entrega.</p>
+        <p className="mt-2 text-sm text-ink/70">{done.label}. Avísanos por WhatsApp para confirmar. Entrega de 1 a 2 p. m. en la Universidad ESAN.</p>
         <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-green mt-5 inline-block w-full">
           Avisar por WhatsApp
         </a>
@@ -104,8 +104,15 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium">Dirección o referencia de entrega</label>
-        <input className="input" value={address} onChange={(e) => setAddress(e.target.value)} maxLength={200} required />
+        <label className="mb-1 block text-sm font-medium">¿Dónde te encontramos en ESAN?</label>
+        <input
+          className="input"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          maxLength={200}
+          placeholder="Ej: entrada principal, aula, pabellón"
+          required
+        />
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium">Nota (opcional)</label>

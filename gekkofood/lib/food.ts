@@ -26,7 +26,24 @@ export type FoodOrder = {
 export const FOOD_GOAL = 7;
 export const EMPTY_CARD: FoodCard = { points: 0, goal: FOOD_GOAL, reward_ready: false };
 
-export const DELIVERY_NOTE = "Haz tu pedido, paga con Yape y te confirmamos la entrega por WhatsApp.";
+export const DELIVERY_NOTE = "Pide hasta las 10 a. m. y recibe tu pedido de 1 a 2 p. m. en la Universidad ESAN.";
+export const DELIVERY_PLACE = "Universidad ESAN";
+/** Hora límite (Lima) para que el pedido salga ese mismo día. */
+export const CUTOFF_HOUR = 10;
+
+/** ¿Un pedido hecho ahora se entrega "hoy" o "mañana"? (solo para mostrar; hora de Lima) */
+export function deliveryWhen(now = new Date()): "hoy" | "mañana" {
+  const h = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", hour: "numeric", hourCycle: "h23" }).format(now)
+  );
+  return h < CUTOFF_HOUR ? "hoy" : "mañana";
+}
+
+export function deliveryLine(now = new Date()) {
+  return deliveryWhen(now) === "hoy"
+    ? "Tu pedido de ahora se entrega hoy, de 1 a 2 p. m., en la Universidad ESAN."
+    : "Ya pasaron las 10 a. m.: tu pedido de ahora se entrega mañana, de 1 a 2 p. m., en la Universidad ESAN.";
+}
 export const MAX_QTY = 20;
 
 export const SIDES: { key: Side; label: string }[] = [
@@ -86,7 +103,7 @@ export function buildFoodOrderWhatsAppUrl(opts: {
     `💰 Total a pagar: *${money(opts.total)}*`,
     `👤 Nombre: ${opts.name}`,
     `📱 Celular: ${opts.phone}`,
-    `📍 Entrega: ${opts.address}`,
+    `📍 Entrega en ESAN (1 a 2 p. m.): ${opts.address}`,
     ...(opts.note ? [`📝 Nota: ${opts.note}`] : []),
     "",
     "📎 *Adjunto captura de Yape* 👇",
@@ -111,7 +128,7 @@ export function buildRewardWhatsAppUrl(opts: {
     "",
     `👤 Nombre: ${opts.name}`,
     `📱 Celular: ${opts.phone}`,
-    `📍 Entrega: ${opts.address}`,
+    `📍 Entrega en ESAN (1 a 2 p. m.): ${opts.address}`,
     ...(opts.note ? [`📝 Nota: ${opts.note}`] : []),
   ].join("\n");
   return `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(text)}`;

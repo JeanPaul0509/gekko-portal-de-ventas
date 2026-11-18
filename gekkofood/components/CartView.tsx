@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import { createClient } from "@/lib/supabase/client";
-import { buildFoodOrderWhatsAppUrl, MAX_QTY, sideLabel, type FoodItem, type Side } from "@/lib/food";
+import { buildFoodOrderWhatsAppUrl, deliveryLine, MAX_QTY, sideLabel, type FoodItem, type Side } from "@/lib/food";
 import { money, plural, YAPE_NAME, YAPE_NUMBER } from "@/lib/utils";
 
 type Done = {
@@ -25,6 +25,11 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
+  const [when, setWhen] = useState("Entrega de 1 a 2 p. m. en la Universidad ESAN (pedidos hasta las 10 a. m.).");
+
+  useEffect(() => {
+    setWhen(deliveryLine());
+  }, []);
 
   const byId = new Map(items.map((i) => [i.id, i]));
   const valid = lines.filter((l) => byId.has(l.itemId));
@@ -43,7 +48,7 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
     setError(null);
     if (valid.length === 0) return setError("Tu carrito está vacío.");
     if (!name.trim()) return setError("Escribe tu nombre.");
-    if (!address.trim()) return setError("Escribe tu dirección o referencia de entrega.");
+    if (!address.trim()) return setError("Escribe dónde te encontramos en ESAN.");
 
     setLoading(true);
     const supabase = createClient();
@@ -175,13 +180,22 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Dirección o referencia de entrega</label>
-          <input className="input" value={address} onChange={(e) => setAddress(e.target.value)} maxLength={200} required />
+          <label className="mb-1 block text-sm font-medium">¿Dónde te encontramos en ESAN?</label>
+          <input
+            className="input"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            maxLength={200}
+            placeholder="Ej: entrada principal, aula, pabellón"
+            required
+          />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium">Nota (opcional)</label>
           <input className="input" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Ej: sin ají" />
         </div>
+
+        <p className="rounded-xl bg-paper p-3 text-sm text-ink/70">🕐 {when}</p>
 
         <div className="rounded-xl bg-paper p-4 text-sm">
           <div className="flex justify-between">
