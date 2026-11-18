@@ -3,7 +3,7 @@
 App web de **Gekko**: tienda de **pollo aderezado** (piezas y promos, se entrega los domingos) y **belleza**, más un apartado de **sorteos/rifas**. Los usuarios se registran con celular y contraseña, hacen pedidos o reservan números, pagan por Yape y envían la captura por WhatsApp. El admin confirma los pagos a mano. Nombre anterior: GoldenTicket (el repo ya se llama gekko-portal-de-ventas).
 
 - **Producción:** https://gekkoperu.vercel.app (antes goldenticketperu.vercel.app, que redirige al nuevo).
-- **Repo:** github.com/JeanPaul0509/gekko-portal-de-ventas (rama `main`; antes se llamaba App-sorteos). El código está en `app-sorteos/`.
+- **Repo:** github.com/JeanPaul0509/gekko-portal-de-ventas (rama `main`; antes se llamaba App-sorteos). El código está en `app-sorteos/` (Gekko) y `gekkofood/` (Gekko Food, ver más abajo).
 - **Stack:** Next.js 15 (App Router) + React 19 + Tailwind v4 + Supabase (Auth, Postgres, Storage) + Vercel.
 - **Idioma:** todo en español de Perú. El usuario no es programador: explicar en pasos simples.
 
@@ -62,6 +62,17 @@ App web de **Gekko**: tienda de **pollo aderezado** (piezas y promos, se entrega
 ## Migraciones SQL (`supabase/migrations/`)
 
 002 grupo WhatsApp · 003 límite de 5 en espera · 004 conteo de compradores · 005 redes sociales · 006 límites de texto · 007 ganador + reset de contraseña + términos · 008 verificación de celular (columna `verified_at`, interruptor, códigos, `reserve_tickets` con la revisión) · 009 tienda (productos, pedidos, stock) · 010 oferta de los jueves · 011 jueves: solo la 1.ª a S/5. El usuario las corre a mano; si algo falla por "función no existe", confirmar que corrió la migración correspondiente.
+
+## Gekko Food (carpeta `gekkofood/`, migración 012)
+
+- **Qué es:** segunda página, aparte de Gekko, para vender **pollo broaster**: pecho S/15, pierna S/13, entrepierna S/13, ala S/11 (editables en Admin → Menú). Cada pieza se pide con **papa sola o con arroz**. Mismo repo, carpeta `gekkofood/` (Next.js 15, mismo stack y mismo diseño que `app-sorteos/`; leer `app-sorteos/DESIGN.md`).
+- **Cuentas compartidas:** usa el **mismo proyecto de Supabase** (mismas variables `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`), así que el celular y la contraseña de Gekko sirven en Gekko Food. La sesión no se comparte entre dominios: la persona entra una vez en cada página. El admin es el mismo (`profiles.role = 'admin'`).
+- **Vercel:** proyecto **aparte**, con *Root Directory* = `gekkofood`. Variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_YAPE_NUMBER`, `NEXT_PUBLIC_YAPE_NAME` (las mismas de Gekko). No necesita las de WhatsApp/Meta.
+- **SQL:** `app-sorteos/supabase/migrations/012_gekkofood.sql` (y al final de `schema.sql`; las migraciones de las dos páginas viven juntas porque la base es una sola). Tablas `food_items`, `food_orders`, `food_order_items`; funciones `food_card`, `create_food_order`, `create_food_reward`, `cancel_my_food_order`, `admin_set_food_order_status`.
+- **Cartilla:** cada pedido **pagado/entregado** (no regalo) suma 1 punto; con 7, el siguiente pedido es un **regalo** (pieza de broaster con chaufa a elección, o hamburguesa), total S/0, entra como "pagado" y **no suma punto**; después la cartilla vuelve a empezar. Los puntos se **calculan** (`food_points`) a partir de los pedidos: si se cancela un pedido o un regalo, la cartilla se corrige sola. Si alguien junta más de 7 antes de canjear, el excedente se conserva.
+- **Pantallas:** `/menu`, `/carrito` ("Ir a pagar" abre WhatsApp con el pedido), `/cartilla` (bolitas + canje del regalo), `/mis-pedidos`, `/admin/pedidos` (por cobrar / por entregar / entregados / cancelados + resumen "para preparar"), `/admin/menu` (precio, nombre, visible/agotado).
+- **WhatsApp y Yape:** igual que Gekko, **912389459** (`WHATSAPP_NUMBER` en `gekkofood/lib/utils.ts`).
+- **Pendiente de confirmar con el usuario:** cuándo/cómo entrega el broaster (hoy el texto dice "te confirmamos la entrega por WhatsApp", constante `DELIVERY_NOTE` en `gekkofood/lib/food.ts`), fotos de las piezas y precio de hamburguesa/chaufa extra si se venden aparte.
 
 ## Pendientes / ideas
 

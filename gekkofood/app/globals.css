@@ -1,0 +1,283 @@
+@import "tailwindcss";
+
+/*
+  Gekko — "Carbón y champán": carbón cálido de fondo, champán (oro suave) como único acento
+  y tarjetas de papel marfil. Verde/amarillo/gris siguen marcando el estado de los números.
+  La paleta "violet" de Tailwind se redefine aquí para que toda la app
+  use los colores de la marca sin tocar cada componente.
+*/
+@theme {
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+
+  --color-ink: #221c17;
+  --color-brand: #1d1814;
+  --color-brand-deep: #110e0b;
+  --color-gold: #d6ad5a;
+  --color-gold-deep: #94702a;
+  --color-gold-soft: #f4ead6;
+  --color-orange: #e8892b;
+  --color-paper: #f4f0e9;
+  --color-line: #e7e0d4;
+
+  --color-violet-50: #faf5ea;
+  --color-violet-100: #f3e8cf;
+  --color-violet-200: #e6d3a6;
+  --color-violet-300: #d6bb7c;
+  --color-violet-400: #c4a15a;
+  --color-violet-500: #b08a3e;
+  --color-violet-600: #7d5c1e;
+  --color-violet-700: #6b4d16;
+  --color-violet-800: #1d1814;
+  --color-violet-900: #110e0b;
+  --color-fuchsia-500: #d6ad5a;
+  --color-fuchsia-600: #b08a3e;
+  --color-amber-400: #dcb55a;
+  --color-ruby: #b3262d;
+  --color-night: #100d0b;
+
+  /* Curvas de movimiento (más firmes que las de CSS por defecto) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+body {
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, rgb(214 173 90 / 0.10), transparent 70%),
+    radial-gradient(50rem 40rem at 0% 100%, rgb(150 90 50 / 0.16), transparent 70%),
+    var(--color-night);
+  background-attachment: fixed;
+  color: #f1ece4;
+  font-feature-settings: "tnum" 1;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+/* En @layer components para que las clases de Tailwind (py-2, etc.) puedan ajustarlas */
+@layer components {
+/* ---------- Marca ---------- */
+.brand {
+  font-weight: 800;
+  font-stretch: 112%;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* ---------- Boleto (tarjeta de sorteo) ---------- */
+.ticket {
+  --notch: 0.85rem;
+  position: relative;
+  background: #fffcf7;
+  color: var(--color-ink);
+  border-radius: 1.1rem;
+  -webkit-mask: radial-gradient(circle var(--notch) at 0 var(--cut), #0000 98%, #000) 0 0 / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% var(--cut), #0000 98%, #000) 100% 0 / 51% 100% no-repeat;
+  mask: radial-gradient(circle var(--notch) at 0 var(--cut), #0000 98%, #000) 0 0 / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% var(--cut), #0000 98%, #000) 100% 0 / 51% 100% no-repeat;
+  filter: drop-shadow(0 10px 24px rgb(0 0 0 / 0.45));
+}
+.ticket-perf {
+  border-top: 2px dashed var(--color-line);
+  margin: 0 var(--notch);
+}
+
+/* ---------- Bolitas de números ---------- */
+.ball {
+  aspect-ratio: 1 / 1;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out), background-color 160ms ease,
+    color 160ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.ball-available { background: #16a34a; color: white; box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.16); }
+@media (hover: hover) and (pointer: fine) {
+  .ball-available:hover { transform: scale(1.06); }
+}
+button.ball:active { transform: scale(0.92); }
+.ball-selected {
+  background: var(--color-brand);
+  color: var(--color-gold);
+  box-shadow: 0 0 0 3px var(--color-gold);
+  transform: scale(1.08);
+}
+.ball-reserved { background: #f5c518; color: #5c4300; box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.12); }
+.ball-sold { background: #d6d9e0; color: #6b7280; text-decoration: line-through; }
+.ball-admin-picked { outline: 3px solid var(--color-ink); outline-offset: 2px; }
+
+/* ---------- Botones e inputs ---------- */
+.btn {
+  border-radius: 0.8rem;
+  padding: 0.7rem 1.1rem;
+  font-weight: 700;
+  transition: transform 160ms var(--ease-out), opacity 150ms ease, background-color 150ms ease, filter 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--color-brand); color: var(--color-gold); letter-spacing: 0.01em; }
+.btn-primary:hover:not(:disabled) { background: var(--color-brand-deep); }
+.btn-gold { background: linear-gradient(180deg, #e6c47f, var(--color-gold)); color: var(--color-ink); box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.12); }
+.btn-gold:hover:not(:disabled) { filter: brightness(1.05); }
+.btn-green { background: #15803d; color: white; }
+.btn-gray { background: #4b5563; color: white; }
+.btn-yellow { background: #f5c518; color: #5c4300; }
+.btn-light { background: #fffcf7; color: var(--color-ink); border: 1px solid var(--color-line); }
+.btn-danger { background: #fee2e2; color: #b91c1c; }
+
+.input {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  width: 100%;
+  border-radius: 0.8rem;
+  border: 1px solid #d9cfbf;
+  background: white;
+  color: var(--color-ink);
+  padding: 0.75rem 1rem;
+  outline: none;
+}
+.input:focus { border-color: var(--color-gold); box-shadow: 0 0 0 3px var(--color-gold-soft); }
+
+.card {
+  background: #fffcf7;
+  color: var(--color-ink);
+  border-radius: 1rem;
+  border: 1px solid rgb(214 173 90 / 0.25);
+  box-shadow: 0 14px 34px -18px rgb(0 0 0 / 0.55);
+}
+
+/* ---------- Detalles de lujo ---------- */
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+.gold-rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, rgb(214 173 90 / 0.7), rgb(214 173 90 / 0.04));
+}
+.gold-rule-center {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgb(214 173 90 / 0.8), transparent);
+}
+/* Tarjeta de producto: marfil con borde champán y sombra profunda; sube un poco al pasar el mouse */
+.card-lux {
+  background: #fffcf7;
+  color: var(--color-ink);
+  border-radius: 1.15rem;
+  border: 1px solid rgb(214 173 90 / 0.3);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 20px 44px -22px rgb(0 0 0 / 0.7);
+  transition: transform 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+}
+.lux-img { transition: transform 700ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .card-lux:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 28px 54px -22px rgb(0 0 0 / 0.8);
+  }
+  .card-lux:hover .lux-img { transform: scale(1.04); }
+}
+
+/* ---------- Entradas (solo transform y opacity; fill "backwards" para no pisar el hover) ---------- */
+.anim-overlay { animation: gt-fade 200ms var(--ease-out) backwards; }
+.anim-modal { animation: gt-modal 240ms var(--ease-out) backwards; }
+.anim-sheet { animation: gt-sheet 320ms var(--ease-drawer) backwards; }
+.anim-toast { animation: gt-toast 200ms var(--ease-out) backwards; }
+.anim-rise { animation: gt-rise 360ms var(--ease-out) backwards; animation-delay: var(--delay, 0ms); }
+
+.skeleton { background: rgb(34 28 23 / 0.08); animation: gt-pulse 1.1s ease-in-out infinite; }
+
+/* ---------- Boleto dorado del inicio (el único momento "show" de la app) ---------- */
+.hero-ticket { perspective: 900px; }
+.hero-ticket-inner {
+  position: relative;
+  overflow: hidden;
+  padding: 1.1rem 1.4rem;
+  border-radius: 14px;
+  color: #3a2a0b;
+  background: linear-gradient(135deg, #f1dca8 0%, #d6ad5a 45%, #b08a3e 100%);
+  -webkit-mask: radial-gradient(circle at 0 62%, #0000 0.75rem, #000 0.78rem) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 62%, #0000 0.75rem, #000 0.78rem) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle at 0 62%, #0000 0.75rem, #000 0.78rem) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 62%, #0000 0.75rem, #000 0.78rem) right / 51% 100% no-repeat;
+  transform: rotate(-4deg);
+  transform-origin: 50% 100%;
+  transition: transform 300ms var(--ease-out);
+  animation: gt-ticket 900ms var(--ease-out) 120ms backwards;
+}
+.hero-ticket-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.6) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: gt-shine 1100ms var(--ease-in-out) 950ms both;
+  pointer-events: none;
+}
+/* ---------- Boleto del login: misma familia que el del inicio, más contenido (es un formulario) ---------- */
+.auth-ticket { animation: gt-auth 700ms var(--ease-out) 80ms backwards; }
+.auth-ticket::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 38%, rgb(214 173 90 / 0.28) 50%, transparent 62%);
+  transform: translateX(-120%);
+  animation: gt-shine 1000ms var(--ease-in-out) 700ms both;
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hero-ticket:hover .hero-ticket-inner { transform: rotate(-1.5deg) translateY(-4px); }
+}
+}
+
+@keyframes gt-fade { from { opacity: 0; } }
+@keyframes gt-modal { from { opacity: 0; transform: translateY(12px) scale(0.97); } }
+@keyframes gt-sheet { from { transform: translateY(100%); } }
+@keyframes gt-toast { from { opacity: 0; transform: translateY(-8px) scale(0.97); } } /* el centrado usa la propiedad translate */
+@keyframes gt-rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes gt-pulse { 50% { opacity: 0.45; } }
+@keyframes gt-ticket { from { opacity: 0; transform: translateY(28px) rotateX(40deg) rotate(-10deg) scale(0.92); } }
+@keyframes gt-shine { to { transform: translateX(120%); } }
+@keyframes gt-auth { from { opacity: 0; transform: perspective(900px) translateY(20px) rotateX(16deg) scale(0.97); } }
+
+/* Movimiento reducido: menos y más suave, no cero. Se quitan desplazamientos, se mantienen fundidos. */
+@media (prefers-reduced-motion: reduce) {
+  .anim-modal, .anim-sheet, .anim-toast, .anim-rise { animation-name: gt-fade; }
+  .btn:active:not(:disabled), button.ball:active, .ball-selected { transform: none; }
+  .card-lux:hover, .card-lux:hover .lux-img { transform: none; }
+  .skeleton { animation: none; }
+  .hero-ticket-inner { animation-name: gt-fade; }
+  .hero-ticket-inner::after { animation: none; opacity: 0; }
+  .auth-ticket { animation-name: gt-fade; }
+  .auth-ticket::after { animation: none; opacity: 0; }
+}
+
+/* ---------- Cartilla de puntos (Gekko Food) ---------- */
+@layer components {
+  .punch {
+    aspect-ratio: 1 / 1;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1rem;
+    transition: transform 240ms var(--ease-out), background-color 160ms ease, color 160ms ease;
+  }
+  .punch-empty { background: var(--color-paper); color: rgb(34 28 23 / 0.35); border: 1px dashed #cfc4b0; }
+  .punch-full { background: var(--color-brand); color: var(--color-gold); box-shadow: 0 0 0 2px var(--color-gold); }
+  .punch-gift { background: var(--color-paper); border: 1px dashed #cfc4b0; filter: grayscale(1); opacity: 0.7; }
+  .punch-gift-ready { background: linear-gradient(135deg, #f1dca8 0%, #d6ad5a 45%, #b08a3e 100%); box-shadow: 0 0 0 2px var(--color-gold-deep); }
+}
