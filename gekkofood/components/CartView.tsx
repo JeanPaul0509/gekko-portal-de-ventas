@@ -25,7 +25,7 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
-  const [when, setWhen] = useState("Entrega de 1 a 2 p. m. en la Universidad ESAN (pedidos hasta las 10 a. m.).");
+  const [when, setWhen] = useState("Entrega de 1 a 2 p. m. en la Universidad ESAN (pedidos hasta las 10 a. m.; lunes, martes, miércoles, viernes y sábado).");
 
   useEffect(() => {
     setWhen(deliveryLine());

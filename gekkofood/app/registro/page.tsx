@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AuthShell from "@/components/AuthShell";
+import PasswordInput from "@/components/PasswordInput";
 import { createClient } from "@/lib/supabase/client";
 import { cleanPhone, isValidPhone, phoneToEmail } from "@/lib/utils";
 
@@ -64,23 +65,11 @@ export default function RegisterPage() {
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium">Contraseña</label>
-          <input
-            className="input"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <PasswordInput value={password} onChange={setPassword} autoComplete="new-password" />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium">Repite la contraseña</label>
-          <input
-            className="input"
-            type="password"
-            value={password2}
-            onChange={(e) => setPassword2(e.target.value)}
-            required
-          />
+          <PasswordInput value={password2} onChange={setPassword2} autoComplete="new-password" />
         </div>
         {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         <button className="btn btn-primary w-full" disabled={loading}>

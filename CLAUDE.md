@@ -24,6 +24,7 @@ App web de **Gekko**: tienda de **pollo aderezado** (piezas y promos, se entrega
 
 ## Autenticación
 
+- Los campos de contraseña (login y registro, en las dos páginas) usan `components/PasswordInput.tsx`, con ojito para mostrar/ocultar. Hay una copia en `app-sorteos/` y otra en `gekkofood/`.
 - Login con celular + contraseña. Internamente cada celular es un correo `9XXXXXXXX@celular.sorteos.app` (sin el 51). En Supabase, "Confirm email" está **desactivado**.
 - El registro solo crea usuarios comunes. Admin: crear usuario en Supabase (Auth → Add user, Auto Confirm) y luego `update public.profiles set role = 'admin' where phone = '9XXXXXXXX';`.
 - Admin actual: celular `994722642`.
@@ -72,7 +73,7 @@ App web de **Gekko**: tienda de **pollo aderezado** (piezas y promos, se entrega
 - **Cartilla:** cada pedido **pagado/entregado** (no regalo) suma 1 punto; con 7, el siguiente pedido es un **regalo** (pieza de broaster con chaufa a elección, o hamburguesa), total S/0, entra como "pagado" y **no suma punto**; después la cartilla vuelve a empezar. Los puntos se **calculan** (`food_points`) a partir de los pedidos: si se cancela un pedido o un regalo, la cartilla se corrige sola. Si alguien junta más de 7 antes de canjear, el excedente se conserva.
 - **Pantallas:** `/menu`, `/carrito` ("Ir a pagar" abre WhatsApp con el pedido), `/cartilla` (bolitas + canje del regalo), `/mis-pedidos`, `/admin/pedidos` (por cobrar / por entregar / entregados / cancelados + resumen "para preparar"), `/admin/menu` (precio, nombre, visible/agotado).
 - **WhatsApp y Yape:** igual que Gekko, **912389459** (`WHATSAPP_NUMBER` en `gekkofood/lib/utils.ts`).
-- **Entrega (decidido por el usuario):** se puede pedir **hasta las 10 a. m.** y la entrega es **de 1 a 2 p. m. en la Universidad ESAN**. Pasadas las 10 a. m. la página avisa que el pedido sale al día siguiente (`deliveryWhen()` en `gekkofood/lib/food.ts`, hora de Lima; es solo un aviso, la base no bloquea pedidos). El campo de dirección pide "¿Dónde te encontramos en ESAN?". Pendiente: confirmar si hay días sin reparto (fines de semana) y si se bloquea el pedido pasada la hora; fotos de las piezas; precio de hamburguesa/chaufa extra si se venden aparte.
+- **Entrega (decidido por el usuario):** se puede pedir **hasta las 10 a. m.** y la entrega es **de 1 a 2 p. m. en la Universidad ESAN**. **Días de reparto: lunes, martes, miércoles, viernes y sábado (jueves y domingo no hay atención).** Pasadas las 10 a. m., o en un día sin atención, la página avisa cuándo sale el pedido ("mañana", "el viernes", "el lunes"; `nextDelivery()`/`deliveryLine()` en `gekkofood/lib/food.ts`, hora de Lima; es solo un aviso, la base no bloquea pedidos). El campo de dirección pide "¿Dónde te encontramos en ESAN?". Pendiente: confirmar si se debe bloquear el pedido pasada la hora o en días sin atención; fotos de las piezas; precio de hamburguesa/chaufa extra si se venden aparte.
 
 ## Pendientes / ideas
 

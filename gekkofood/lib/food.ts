@@ -26,24 +26,46 @@ export type FoodOrder = {
 export const FOOD_GOAL = 7;
 export const EMPTY_CARD: FoodCard = { points: 0, goal: FOOD_GOAL, reward_ready: false };
 
-export const DELIVERY_NOTE = "Pide hasta las 10 a. m. y recibe tu pedido de 1 a 2 p. m. en la Universidad ESAN.";
+export const DELIVERY_NOTE =
+  "Pide hasta las 10 a. m. y recibe de 1 a 2 p. m. en la Universidad ESAN. Atendemos lunes, martes, miércoles, viernes y sábado.";
 export const DELIVERY_PLACE = "Universidad ESAN";
 /** Hora límite (Lima) para que el pedido salga ese mismo día. */
 export const CUTOFF_HOUR = 10;
 
-/** ¿Un pedido hecho ahora se entrega "hoy" o "mañana"? (solo para mostrar; hora de Lima) */
-export function deliveryWhen(now = new Date()): "hoy" | "mañana" {
-  const h = Number(
+const WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const NO_SERVICE = ["Thu", "Sun"]; // jueves y domingo no hay atención
+const DAY_ES: Record<string, string> = {
+  Sun: "domingo",
+  Mon: "lunes",
+  Tue: "martes",
+  Wed: "miércoles",
+  Thu: "jueves",
+  Fri: "viernes",
+  Sat: "sábado",
+};
+
+/** Próximo reparto para un pedido hecho ahora (solo para mostrar; hora de Lima). */
+export function nextDelivery(now = new Date()) {
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", weekday: "short" }).format(now);
+  const hour = Number(
     new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", hour: "numeric", hourCycle: "h23" }).format(now)
   );
-  return h < CUTOFF_HOUR ? "hoy" : "mañana";
+  const idx = WEEK.indexOf(weekday);
+  const closedToday = NO_SERVICE.includes(weekday);
+  let offset = !closedToday && hour < CUTOFF_HOUR ? 0 : 1;
+  while (NO_SERVICE.includes(WEEK[(idx + offset) % 7]) && offset < 8) offset++;
+  const day = WEEK[(idx + offset) % 7];
+  const label = offset === 0 ? "hoy" : offset === 1 ? "mañana" : `el ${DAY_ES[day]}`;
+  return { offset, label, closedToday, afterCutoff: hour >= CUTOFF_HOUR };
 }
 
 export function deliveryLine(now = new Date()) {
-  return deliveryWhen(now) === "hoy"
-    ? "Tu pedido de ahora se entrega hoy, de 1 a 2 p. m., en la Universidad ESAN."
-    : "Ya pasaron las 10 a. m.: tu pedido de ahora se entrega mañana, de 1 a 2 p. m., en la Universidad ESAN.";
+  const d = nextDelivery(now);
+  const prefix = d.offset === 0 ? "" : d.closedToday ? "Hoy no hay atención. " : "Ya pasaron las 10 a. m.: ";
+  const start = prefix ? "tu pedido de ahora" : "Tu pedido de ahora";
+  return `${prefix}${start} se entrega ${d.label}, de 1 a 2 p. m., en la Universidad ESAN.`;
 }
+
 export const MAX_QTY = 20;
 
 export const SIDES: { key: Side; label: string }[] = [
