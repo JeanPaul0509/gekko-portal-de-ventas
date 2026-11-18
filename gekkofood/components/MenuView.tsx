@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
+import SafeImg from "@/components/SafeImg";
 import { SIDES, type FoodItem, type Side } from "@/lib/food";
 import { money, plural } from "@/lib/utils";
 
@@ -13,6 +14,9 @@ function ItemCard({ item }: { item: FoodItem }) {
 
   return (
     <article className="card-lux flex flex-col p-5">
+      <div className="mb-4 aspect-[4/3] overflow-hidden rounded-xl bg-gold-soft">
+        <SafeImg src={item.image_url} alt={item.name} icon="🍗" className="lux-img h-full w-full object-cover" />
+      </div>
       <p className="eyebrow text-gold-deep!">Broaster</p>
       <h3 className="mt-1 text-xl font-extrabold [overflow-wrap:anywhere]">{item.name}</h3>
       <p className="mt-1 text-sm text-ink/60">Con papa o arroz, a tu elección.</p>

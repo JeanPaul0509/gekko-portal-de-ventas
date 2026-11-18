@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "@/components/CartProvider";
+import SafeImg from "@/components/SafeImg";
 import { createClient } from "@/lib/supabase/client";
 import { buildFoodOrderWhatsAppUrl, deliveryLine, MAX_QTY, sideLabel, type FoodItem, type Side } from "@/lib/food";
 import { money, plural, YAPE_NAME, YAPE_NUMBER } from "@/lib/utils";
@@ -51,6 +52,9 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
     if (!address.trim()) return setError("Escribe dónde te encontramos en ESAN.");
 
     setLoading(true);
+    // Se abre una pestaña YA (con el toque del botón) para que el navegador no bloquee WhatsApp;
+    // cuando el pedido se guarda, esa pestaña se manda a WhatsApp.
+    const popup = window.open("about:blank", "_blank");
     const supabase = createClient();
     const { data, error } = await supabase.rpc("create_food_order", {
       p_items: valid.map((l) => ({ item_id: l.itemId, qty: l.qty, side: l.side })),
@@ -59,15 +63,17 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
       p_note: note.trim(),
     });
     setLoading(false);
-    if (error) return setError(error.message);
+    if (error) {
+      popup?.close();
+      return setError(error.message);
+    }
 
     const res = data as {
       order_no: number;
       total: number;
       items: { name: string; side: Side; price: number; qty: number }[];
     };
-    clear();
-    setDone({
+    const result: Done = {
       orderNo: res.order_no,
       total: Number(res.total),
       items: res.items.map((i) => ({ ...i, price: Number(i.price) })),
@@ -75,7 +81,13 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
       phone,
       address: address.trim(),
       note: note.trim() || null,
-    });
+    };
+    clear();
+    setDone(result);
+
+    const url = buildFoodOrderWhatsAppUrl(result);
+    if (popup && !popup.closed) popup.location.href = url;
+    else window.location.href = url; // si el navegador no dejó abrir otra pestaña, se va directo
   }
 
   if (done) {
@@ -101,10 +113,10 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
               {YAPE_NAME ? ` (${YAPE_NAME})` : ""}
             </>
           ) : null}{" "}
-          y envíanos la captura por WhatsApp para confirmar tu pedido.
+          y envíanos la captura por WhatsApp para confirmar tu pedido. Ya te abrimos WhatsApp con tu pedido escrito.
         </p>
         <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-green mt-5 inline-block w-full">
-          Enviar captura por WhatsApp
+          Abrir WhatsApp de nuevo
         </a>
         <Link href="/mis-pedidos" className="btn btn-light mt-3 inline-block w-full">
           Ver mis pedidos
@@ -141,7 +153,10 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
           const it = byId.get(l.itemId)!;
           return (
             <div key={l.itemId + l.side} className="card flex items-center justify-between gap-3 p-4">
-              <div className="min-w-0">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gold-soft">
+                <SafeImg src={it.image_url} alt={it.name} icon="🍗" iconClassName="text-2xl" className="h-full w-full object-cover" />
+              </div>
+              <div className="min-w-0 flex-1">
                 <p className="font-extrabold [overflow-wrap:anywhere]">{it.name}</p>
                 <p className="text-sm text-ink/60">{sideLabel(l.side)}</p>
                 <p className="text-sm font-bold text-violet-700">{money(it.price * l.qty)}</p>

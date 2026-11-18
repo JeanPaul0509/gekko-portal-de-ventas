@@ -1328,3 +1328,13 @@ select * from (values
   ('Ala',         11.00::numeric, 4)
 ) as v(name, price, sort)
 where not exists (select 1 from public.food_items);
+
+
+-- =====================================================================
+--  GEKKO FOOD: fotos de las piezas del menú
+--  Cómo usarlo: Supabase > SQL Editor > New query > pega TODO esto > Run
+--  Es seguro correrlo más de una vez. Las fotos se guardan en el mismo
+--  bucket de Gekko (raffle-images, carpeta comida/), que ya acepta fotos
+--  solo del admin.
+-- =====================================================================
+alter table public.food_items add column if not exists image_url text;

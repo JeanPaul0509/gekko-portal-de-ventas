@@ -10,7 +10,7 @@ export default async function CardPage() {
   } = await supabase.auth.getUser();
   const [cardRes, itemsRes, profileRes] = await Promise.all([
     supabase.rpc("food_card"),
-    supabase.from("food_items").select("id, name, price, active, sort").eq("active", true).order("sort"),
+    supabase.from("food_items").select("id, name, price, active, sort, image_url").eq("active", true).order("sort"),
     supabase.from("profiles").select("phone").eq("id", user?.id ?? "").maybeSingle(),
   ]);
   const card = (cardRes.data as FoodCard | null) ?? EMPTY_CARD;

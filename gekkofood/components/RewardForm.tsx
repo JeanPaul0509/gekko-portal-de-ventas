@@ -26,6 +26,7 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
     if (choice === "chaufa" && !itemId) return setError("Elige la pieza de tu broaster.");
 
     setLoading(true);
+    const popup = window.open("about:blank", "_blank"); // se abre con el toque para que no lo bloqueen
     const { data, error } = await createClient().rpc("create_food_reward", {
       p_choice: choice,
       p_item_id: choice === "chaufa" ? itemId : null,
@@ -34,10 +35,17 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
       p_note: note.trim(),
     });
     setLoading(false);
-    if (error) return setError(error.message);
+    if (error) {
+      popup?.close();
+      return setError(error.message);
+    }
 
     const res = data as { order_no: number; label: string };
-    setDone({ orderNo: res.order_no, label: res.label, name: name.trim(), address: address.trim(), note: note.trim() || null });
+    const result = { orderNo: res.order_no, label: res.label, name: name.trim(), address: address.trim(), note: note.trim() || null };
+    setDone(result);
+    const url = buildRewardWhatsAppUrl({ ...result, phone });
+    if (popup && !popup.closed) popup.location.href = url;
+    else window.location.href = url;
   }
 
   if (done) {
@@ -48,7 +56,7 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
         <h2 className="mt-2 text-2xl font-extrabold">¡Regalo pedido! N.º {done.orderNo}</h2>
         <p className="mt-2 text-sm text-ink/70">{done.label}. Avísanos por WhatsApp para confirmar. Entrega de 1 a 2 p. m. en la Universidad ESAN.</p>
         <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-green mt-5 inline-block w-full">
-          Avisar por WhatsApp
+          Abrir WhatsApp de nuevo
         </a>
         <Link href="/mis-pedidos" className="btn btn-light mt-3 inline-block w-full">
           Ver mis pedidos

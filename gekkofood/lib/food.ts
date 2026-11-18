@@ -3,7 +3,7 @@ import { money, WHATSAPP_NUMBER } from "@/lib/utils";
 export type Side = "papa" | "arroz";
 export type FoodStatus = "pending" | "paid" | "delivered" | "cancelled";
 
-export type FoodItem = { id: string; name: string; price: number; active: boolean; sort: number };
+export type FoodItem = { id: string; name: string; price: number; active: boolean; sort: number; image_url: string | null };
 export type FoodCard = { points: number; goal: number; reward_ready: boolean };
 
 export type FoodOrderItem = { id: number; name: string; side: Side | null; price: number; qty: number };

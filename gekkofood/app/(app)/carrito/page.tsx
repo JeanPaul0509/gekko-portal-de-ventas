@@ -8,7 +8,7 @@ export default async function CartPage() {
     data: { user },
   } = await supabase.auth.getUser();
   const [itemsRes, profileRes] = await Promise.all([
-    supabase.from("food_items").select("id, name, price, active, sort").eq("active", true).order("sort"),
+    supabase.from("food_items").select("id, name, price, active, sort, image_url").eq("active", true).order("sort"),
     supabase.from("profiles").select("phone").eq("id", user?.id ?? "").maybeSingle(),
   ]);
   const items = ((itemsRes.data ?? []) as FoodItem[]).map((i) => ({ ...i, price: Number(i.price) }));
