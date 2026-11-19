@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { foodStatusWhatsAppUrl, REWARD_TEXT, sideLabel, statusChip, type FoodOrder, type FoodStatus } from "@/lib/food";
+import { foodStatusWhatsAppUrl, isPromoLine, REWARD_TEXT, sideLabel, statusChip, type FoodOrder, type FoodStatus } from "@/lib/food";
 import { formatDate, money, num } from "@/lib/utils";
 
 type Tab = "pending" | "paid" | "delivered" | "cancelled";
@@ -41,11 +41,16 @@ function OrderRow({ o }: { o: FoodOrder }) {
   });
 
   return (
-    <article className="card p-5">
+    <article className={`card p-5 ${o.reward_choice ? "ring-2 ring-gold" : ""}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-extrabold">
-            Pedido N.º {o.order_no} · <span className="[overflow-wrap:anywhere]">{o.buyer_name}</span>
+            Pedido N.º {o.order_no}
+            {o.reward_choice && (
+              <span className="ml-2 inline-block rounded-full bg-brand px-2.5 py-0.5 align-middle text-[0.7rem] font-bold uppercase tracking-wider text-gold">
+                🎁 Promo
+              </span>
+            )} · <span className="[overflow-wrap:anywhere]">{o.buyer_name}</span>
           </p>
           <p className="text-xs text-ink/50">
             {formatDate(o.created_at)} · 📱 {o.buyer_phone}
@@ -58,8 +63,14 @@ function OrderRow({ o }: { o: FoodOrder }) {
 
       <ul className="mt-3 space-y-1 text-sm">
         {o.food_order_items.map((i) => (
-          <li key={i.id} className="flex justify-between gap-3">
+          <li
+            key={i.id}
+            className={`flex justify-between gap-3 ${
+              isPromoLine(i) ? "-mx-2 rounded-lg bg-gold-soft px-2 py-1 font-bold" : ""
+            }`}
+          >
             <span className="[overflow-wrap:anywhere]">
+              {isPromoLine(i) && "🎁 "}
               {i.qty} × {i.name}
               {i.side ? ` (${sideLabel(i.side)})` : ""}
             </span>
@@ -68,7 +79,7 @@ function OrderRow({ o }: { o: FoodOrder }) {
         ))}
       </ul>
       {o.reward_choice && (
-        <p className="mt-3 rounded-xl bg-gold-soft p-3 text-sm font-semibold">
+        <p className="mt-3 rounded-xl border border-gold bg-brand p-3 text-sm font-bold text-gold">
           🎁 Promo cartilla llena: {REWARD_TEXT[o.reward_choice]}
         </p>
       )}

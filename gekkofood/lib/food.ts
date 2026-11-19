@@ -1,6 +1,6 @@
 import { money, WHATSAPP_NUMBER } from "@/lib/utils";
 
-/** papa_arroz = papa y arroz · arroz = solo arroz · papa_chaufa / chaufa = lo mismo con chaufa (promo del 8.º pedido) · papa = papa sola (pedidos antiguos) */
+/** papa_arroz = papa y arroz · arroz = solo arroz · papa_chaufa / chaufa = lo mismo con chaufa (promo de cartilla llena) · papa = papa sola (pedidos antiguos) */
 export type Side = "papa" | "papa_arroz" | "arroz" | "papa_chaufa" | "chaufa";
 export type Reward = "chaufa" | "hamburguesa";
 /** Lo que se puede elegir hoy en el carrito. */
@@ -116,9 +116,14 @@ export function statusChip(o: Pick<FoodOrder, "status">) {
   return FOOD_STATUS[o.status];
 }
 
-/** Texto corto de la promo del 8.º pedido (para tarjetas y mensajes). */
+/** ¿Esta línea es el regalo de la promo? (la pieza con chaufa o la hamburguesa) */
+export function isPromoLine(i: { side: Side | null; price: number }) {
+  return i.side === "papa_chaufa" || i.side === "chaufa" || (i.price === 0 && i.side === null);
+}
+
+/** Texto corto de la promo de cartilla llena (para tarjetas y mensajes). */
 export const REWARD_TEXT: Record<Reward, string> = {
-  chaufa: "Arroz blanco cambiado por chaufa",
+  chaufa: "1 pieza con chaufa en vez de arroz blanco",
   hamburguesa: "Hamburguesa de regalo",
 };
 
@@ -128,7 +133,7 @@ function itemLines(items: Line[]) {
   return items.map((i) => {
     const side = i.side ? ` (${sideLabel(i.side)})` : "";
     const sub = i.price > 0 ? ` — ${money(i.price * i.qty)}` : "";
-    return `• ${i.qty} × ${i.name}${side}${sub}`;
+    return `${isPromoLine(i) ? "🎁" : "•"} ${i.qty} × ${i.name}${side}${sub}${isPromoLine(i) ? " (promo)" : ""}`;
   });
 }
 
@@ -148,7 +153,7 @@ export function buildFoodOrderWhatsAppUrl(opts: {
   total: number;
   /** "hoy", "mañana", "el viernes"... según la hora en que se pidió */
   forDay?: string;
-  /** regalo del 8.º pedido */
+  /** regalo de la cartilla llena */
   reward?: Reward | null;
 }) {
   const text = [

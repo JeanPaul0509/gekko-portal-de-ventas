@@ -249,7 +249,7 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
             <p className="text-xs text-ink/70">Pagas tu pedido normal y te damos esto sin costo. Este pedido no suma punto.</p>
             {(
               [
-                { key: "chaufa", label: "🍚 Chaufa en vez del arroz blanco" },
+                { key: "chaufa", label: "🍚 Chaufa en vez del arroz blanco (en 1 pieza)" },
                 { key: "hamburguesa", label: "🍔 Una hamburguesa de regalo" },
                 { key: null, label: "Ahora no, la uso en otro pedido" },
               ] as { key: Reward | null; label: string }[]
@@ -259,6 +259,11 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
                 {o.label}
               </label>
             ))}
+            {reward === "chaufa" && valid[0] && (
+              <p className="text-xs font-semibold text-ink/80">
+                Va en 1 pieza: {byId.get(valid[0].itemId)?.name}. Las demás piezas van normal.
+              </p>
+            )}
           </fieldset>
         )}
 
