@@ -6,7 +6,7 @@ import { useCart } from "@/components/CartProvider";
 import LateOrderModal from "@/components/LateOrderModal";
 import SafeImg from "@/components/SafeImg";
 import { createClient } from "@/lib/supabase/client";
-import { buildFoodOrderWhatsAppUrl, deliveryLine, lateNotice, MAX_QTY, nextDelivery, sideLabel, type FoodItem, type Side } from "@/lib/food";
+import { buildFoodOrderWhatsAppUrl, deliveryLine, lateNotice, MAX_QTY, nextDelivery, sideLabel, type FoodItem, type Reward, type Side } from "@/lib/food";
 import { money, plural, YAPE_NAME, YAPE_NUMBER } from "@/lib/utils";
 
 type Done = {
@@ -19,9 +19,10 @@ type Done = {
   note: string | null;
   forDay: string;
   deliveryText: string;
+  reward: Reward | null;
 };
 
-export default function CartView({ items, phone }: { items: FoodItem[]; phone: string }) {
+export default function CartView({ items, phone, promoReady }: { items: FoodItem[]; phone: string; promoReady: boolean }) {
   const { lines, ready, setQty, remove, clear } = useCart();
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -30,6 +31,8 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
   const [when, setWhen] = useState("Entrega de 12:30 a 2 p. m. en la Universidad ESAN (reserva hasta las 10 a. m.).");
+  // Promo del 8.º pedido: "chaufa", "hamburguesa" o null (no usarla en este pedido)
+  const [reward, setReward] = useState<Reward | null>("chaufa");
   const [notice, setNotice] = useState<{ title: string; body: string } | null>(null);
   const [late, setLate] = useState(false); // true = el pedido ya no sale hoy
 
@@ -75,6 +78,7 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
       p_name: name.trim(),
       p_address: address.trim(),
       p_note: note.trim(),
+      p_reward: promoReady ? reward : null,
     });
     setLoading(false);
     if (error) {
@@ -97,6 +101,7 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
       note: note.trim() || null,
       forDay: nextDelivery().label,
       deliveryText: deliveryLine(),
+      reward: promoReady ? reward : null,
     };
     clear();
     setDone(result);
@@ -237,6 +242,25 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
           <label className="mb-1 block text-sm font-medium">Nota (opcional)</label>
           <input className="input" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Ej: sin ají" />
         </div>
+
+        {promoReady && (
+          <fieldset className="space-y-2 rounded-xl border border-gold bg-gold-soft p-3">
+            <legend className="px-1 text-sm font-extrabold">🎁 Este es tu 8.º pedido: elige tu promo</legend>
+            <p className="text-xs text-ink/70">Pagas tu pedido normal y te damos esto sin costo. Este pedido no suma punto.</p>
+            {(
+              [
+                { key: "chaufa", label: "🍚 Chaufa en vez del arroz blanco" },
+                { key: "hamburguesa", label: "🍔 Una hamburguesa de regalo" },
+                { key: null, label: "Ahora no, la uso en otro pedido" },
+              ] as { key: Reward | null; label: string }[]
+            ).map((o) => (
+              <label key={String(o.key)} className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold">
+                <input type="radio" name="promo" checked={reward === o.key} onChange={() => setReward(o.key)} />
+                {o.label}
+              </label>
+            ))}
+          </fieldset>
+        )}
 
         <p
           className={`rounded-xl p-3 text-sm ${

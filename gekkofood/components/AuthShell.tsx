@@ -27,7 +27,7 @@ export default function AuthShell({
         <ul className="anim-rise mt-8 space-y-2 text-sm text-white/70" style={{ ["--delay" as string]: "450ms" }}>
           <li className="flex gap-2"><span className="text-gold">✓</span>Pollo broaster con papa y arroz, o solo arroz.</li>
           <li className="flex gap-2"><span className="text-gold">✓</span>Pides en la app y pagas con Yape.</li>
-          <li className="flex gap-2"><span className="text-gold">✓</span>Cada pedido llena una bolita: tu 8.º pedido es de regalo.</li>
+          <li className="flex gap-2"><span className="text-gold">✓</span>Cada pedido llena una bolita: tu 8.º pedido trae regalo.</li>
         </ul>
         <p className="mt-8 text-center text-xs text-white/50">
           <a href="https://gekkoperu.vercel.app/terminos" className="underline underline-offset-4 hover:text-white">

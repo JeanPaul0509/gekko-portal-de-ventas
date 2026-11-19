@@ -1,7 +1,8 @@
 import { money, WHATSAPP_NUMBER } from "@/lib/utils";
 
-/** papa_arroz = papa y arroz (la de siempre) · arroz = solo arroz · papa = papa sola (solo pedidos antiguos) */
-export type Side = "papa" | "papa_arroz" | "arroz";
+/** papa_arroz = papa y arroz · arroz = solo arroz · papa_chaufa / chaufa = lo mismo con chaufa (promo del 8.º pedido) · papa = papa sola (pedidos antiguos) */
+export type Side = "papa" | "papa_arroz" | "arroz" | "papa_chaufa" | "chaufa";
+export type Reward = "chaufa" | "hamburguesa";
 /** Lo que se puede elegir hoy en el carrito. */
 export type CartSide = "papa_arroz" | "arroz";
 export type FoodStatus = "pending" | "paid" | "delivered" | "cancelled";
@@ -20,6 +21,7 @@ export type FoodOrder = {
   note: string | null;
   total: number;
   is_reward: boolean;
+  reward_choice: Reward | null;
   status: FoodStatus;
   created_at: string;
   food_order_items: FoodOrderItem[];
@@ -95,6 +97,8 @@ export const SIDES: { key: CartSide; label: string }[] = [
 export function sideLabel(side: Side | null | undefined) {
   if (side === "papa_arroz") return "papa y arroz";
   if (side === "arroz") return "solo arroz";
+  if (side === "papa_chaufa") return "papa y chaufa";
+  if (side === "chaufa") return "solo chaufa";
   if (side === "papa") return "papa sola";
   return "";
 }
@@ -106,11 +110,15 @@ export const FOOD_STATUS: Record<FoodStatus, { label: string; cls: string }> = {
   cancelled: { label: "Cancelado", cls: "bg-red-100 text-red-700" },
 };
 
-/** Los regalos no se pagan: se muestran con su propia etiqueta. */
-export function statusChip(o: Pick<FoodOrder, "status" | "is_reward">) {
-  if (o.is_reward && o.status === "paid") return { label: "🎁 Regalo confirmado", cls: "bg-green-100 text-green-700" };
+export function statusChip(o: Pick<FoodOrder, "status">) {
   return FOOD_STATUS[o.status];
 }
+
+/** Texto corto de la promo del 8.º pedido (para tarjetas y mensajes). */
+export const REWARD_TEXT: Record<Reward, string> = {
+  chaufa: "Arroz blanco cambiado por chaufa",
+  hamburguesa: "Hamburguesa de regalo",
+};
 
 type Line = { name: string; side: Side | null; price: number; qty: number };
 
@@ -138,6 +146,8 @@ export function buildFoodOrderWhatsAppUrl(opts: {
   total: number;
   /** "hoy", "mañana", "el viernes"... según la hora en que se pidió */
   forDay?: string;
+  /** regalo del 8.º pedido */
+  reward?: Reward | null;
 }) {
   const text = [
     `¡Hola! 👋 Hice el pedido *N.º ${opts.orderNo}* en Gekko Food:`,
@@ -149,33 +159,12 @@ export function buildFoodOrderWhatsAppUrl(opts: {
     `📱 Celular: ${opts.phone}`,
     `📍 Entrega en ESAN (12:30 a 2 p. m.): ${opts.address}`,
     ...(opts.forDay ? [`🕐 Para: ${opts.forDay}`] : []),
+    ...(opts.reward ? [`🎁 Promo 8.º pedido: ${REWARD_TEXT[opts.reward]}`] : []),
     ...(opts.note ? [`📝 Nota: ${opts.note}`] : []),
     "",
     "📎 *Adjunto captura de Yape* 👇",
   ].join("\n");
   // api.whatsapp.com conserva los emojis; wa.me a veces los rompe al redirigir
-  return `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(text)}`;
-}
-
-/** Mensaje del cliente para confirmar el regalo de su cartilla. */
-export function buildRewardWhatsAppUrl(opts: {
-  orderNo: number;
-  name: string;
-  phone: string;
-  address: string;
-  note?: string | null;
-  label: string;
-}) {
-  const text = [
-    `¡Hola! 🎁 Completé mi cartilla de Gekko Food y quiero canjear mi regalo (pedido *N.º ${opts.orderNo}*):`,
-    "",
-    `• ${opts.label}`,
-    "",
-    `👤 Nombre: ${opts.name}`,
-    `📱 Celular: ${opts.phone}`,
-    `📍 Entrega en ESAN (12:30 a 2 p. m.): ${opts.address}`,
-    ...(opts.note ? [`📝 Nota: ${opts.note}`] : []),
-  ].join("\n");
   return `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(text)}`;
 }
 
@@ -185,7 +174,6 @@ export function foodStatusWhatsAppUrl(opts: {
   name: string;
   orderNo: number;
   status: FoodStatus;
-  isReward: boolean;
   items: Line[];
   total: number;
 }) {
@@ -193,9 +181,7 @@ export function foodStatusWhatsAppUrl(opts: {
   const hi = `¡Hola${first ? " " + first : ""}!`;
   const head =
     opts.status === "paid"
-      ? opts.isReward
-        ? `${hi} 🎁 Confirmamos tu regalo del pedido *N.º ${opts.orderNo}*.`
-        : `${hi} ✅ Confirmamos tu pago del pedido *N.º ${opts.orderNo}*.`
+      ? `${hi} ✅ Confirmamos tu pago del pedido *N.º ${opts.orderNo}*.`
       : opts.status === "delivered"
         ? `${hi} 📦 Tu pedido *N.º ${opts.orderNo}* ya fue entregado. ¡Gracias por tu compra!`
         : opts.status === "cancelled"

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { buildFoodOrderWhatsAppUrl, buildRewardWhatsAppUrl, sideLabel, statusChip, type FoodOrder } from "@/lib/food";
+import { buildFoodOrderWhatsAppUrl, REWARD_TEXT, sideLabel, statusChip, type FoodOrder } from "@/lib/food";
 import { formatDate, money, YAPE_NAME, YAPE_NUMBER } from "@/lib/utils";
 
 function OrderCard({ o }: { o: FoodOrder }) {
@@ -13,7 +13,7 @@ function OrderCard({ o }: { o: FoodOrder }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const chip = statusChip(o);
-  const canCancel = o.status === "pending" || (o.is_reward && o.status === "paid");
+  const canCancel = o.status === "pending";
 
   async function cancel() {
     setBusy(true);
@@ -25,31 +25,23 @@ function OrderCard({ o }: { o: FoodOrder }) {
     router.refresh();
   }
 
-  const waUrl = o.is_reward
-    ? buildRewardWhatsAppUrl({
-        orderNo: o.order_no,
-        name: o.buyer_name,
-        phone: o.buyer_phone,
-        address: o.address ?? "",
-        note: o.note,
-        label: o.food_order_items.map((i) => i.name).join(", "),
-      })
-    : buildFoodOrderWhatsAppUrl({
-        orderNo: o.order_no,
-        name: o.buyer_name,
-        phone: o.buyer_phone,
-        address: o.address ?? "",
-        note: o.note,
-        items: o.food_order_items,
-        total: o.total,
-      });
+  const waUrl = buildFoodOrderWhatsAppUrl({
+    orderNo: o.order_no,
+    name: o.buyer_name,
+    phone: o.buyer_phone,
+    address: o.address ?? "",
+    note: o.note,
+    items: o.food_order_items,
+    total: o.total,
+    reward: o.reward_choice,
+  });
 
   return (
     <article className="card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="font-extrabold">
-            {o.is_reward ? "🎁 Regalo" : "Pedido"} N.º {o.order_no}
+            Pedido N.º {o.order_no}
           </p>
           <p className="text-xs text-ink/50">{formatDate(o.created_at)}</p>
         </div>
@@ -67,12 +59,15 @@ function OrderCard({ o }: { o: FoodOrder }) {
           </li>
         ))}
       </ul>
-      {!o.is_reward && (
-        <p className="mt-3 flex justify-between border-t border-line pt-3 font-extrabold">
-          <span>Total</span>
-          <span>{money(o.total)}</span>
+      {o.reward_choice && (
+        <p className="mt-3 rounded-xl bg-gold-soft p-3 text-sm font-semibold">
+          🎁 Promo 8.º pedido: {REWARD_TEXT[o.reward_choice]}
         </p>
       )}
+      <p className="mt-3 flex justify-between border-t border-line pt-3 font-extrabold">
+        <span>Total</span>
+        <span>{money(o.total)}</span>
+      </p>
 
       {o.status === "pending" && (
         <p className="mt-3 rounded-xl bg-paper p-3 text-sm text-ink/70">
@@ -91,9 +86,9 @@ function OrderCard({ o }: { o: FoodOrder }) {
       {error && <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {(o.status === "pending" || (o.is_reward && o.status === "paid")) && (
+        {o.status === "pending" && (
           <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn btn-green">
-            {o.is_reward ? "Avisar por WhatsApp" : "Reenviar por WhatsApp"}
+            Reenviar por WhatsApp
           </a>
         )}
         {canCancel &&

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { foodStatusWhatsAppUrl, sideLabel, statusChip, type FoodOrder, type FoodStatus } from "@/lib/food";
+import { foodStatusWhatsAppUrl, REWARD_TEXT, sideLabel, statusChip, type FoodOrder, type FoodStatus } from "@/lib/food";
 import { formatDate, money, num } from "@/lib/utils";
 
 type Tab = "pending" | "paid" | "delivered" | "cancelled";
@@ -36,7 +36,6 @@ function OrderRow({ o }: { o: FoodOrder }) {
     name: o.buyer_name,
     orderNo: o.order_no,
     status: o.status,
-    isReward: o.is_reward,
     items: o.food_order_items,
     total: o.total,
   });
@@ -46,7 +45,7 @@ function OrderRow({ o }: { o: FoodOrder }) {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-extrabold">
-            {o.is_reward ? "🎁 Regalo" : "Pedido"} N.º {o.order_no} · <span className="[overflow-wrap:anywhere]">{o.buyer_name}</span>
+            Pedido N.º {o.order_no} · <span className="[overflow-wrap:anywhere]">{o.buyer_name}</span>
           </p>
           <p className="text-xs text-ink/50">
             {formatDate(o.created_at)} · 📱 {o.buyer_phone}
@@ -68,12 +67,15 @@ function OrderRow({ o }: { o: FoodOrder }) {
           </li>
         ))}
       </ul>
-      {!o.is_reward && (
-        <p className="mt-3 flex justify-between border-t border-line pt-3 font-extrabold">
-          <span>Total</span>
-          <span>{money(o.total)}</span>
+      {o.reward_choice && (
+        <p className="mt-3 rounded-xl bg-gold-soft p-3 text-sm font-semibold">
+          🎁 Promo 8.º pedido: {REWARD_TEXT[o.reward_choice]}
         </p>
       )}
+      <p className="mt-3 flex justify-between border-t border-line pt-3 font-extrabold">
+        <span>Total</span>
+        <span>{money(o.total)}</span>
+      </p>
 
       {error && <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
