@@ -32,7 +32,7 @@ export const FOOD_GOAL = 7;
 export const EMPTY_CARD: FoodCard = { points: 0, goal: FOOD_GOAL, reward_ready: false };
 
 export const DELIVERY_NOTE =
-  "Reserva tu pedido hasta las 10 a. m. y recíbelo de 12:30 a 2 p. m. en la Universidad ESAN. Atendemos lunes, martes, miércoles, viernes y sábado.";
+  "Reserva tu pedido hasta las 10 a. m. y recíbelo de 12:30 a 2:00 p. m. en la Universidad ESAN. Atendemos lunes, martes, miércoles, viernes y sábado.";
 export const DELIVERY_PLACE = "Universidad ESAN";
 /** Hora límite (Lima) para que el pedido salga ese mismo día. */
 export const CUTOFF_HOUR = 10;
@@ -60,32 +60,37 @@ export function nextDelivery(now = new Date()) {
   let offset = !closedToday && hour < CUTOFF_HOUR ? 0 : 1;
   while (NO_SERVICE.includes(WEEK[(idx + offset) % 7]) && offset < 8) offset++;
   const day = WEEK[(idx + offset) % 7];
-  const label = offset === 0 ? "hoy" : offset === 1 ? "mañana" : `el ${DAY_ES[day]}`;
-  return { offset, label, closedToday, afterCutoff: hour >= CUTOFF_HOUR };
+  // Fecha del día de entrega (Perú no cambia de hora, así que sumar días exactos funciona)
+  const dayNum = new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", day: "numeric" }).format(
+    new Date(now.getTime() + offset * 86_400_000)
+  );
+  const dayName = `${DAY_ES[day]} ${dayNum}`; // "viernes 20"
+  const label = offset === 0 ? `hoy ${dayName}` : offset === 1 ? `mañana ${dayName}` : `el ${dayName}`;
+  return { offset, label, dayName, closedToday, afterCutoff: hour >= CUTOFF_HOUR };
 }
 
-export const DELIVERY_HOURS = "de 12:30 a 2 p. m.";
+export const DELIVERY_HOURS = "de 12:30 a 2:00 p. m.";
 
+/** Recuadro dorado del menú y del carrito. */
 export function deliveryLine(now = new Date()) {
   const d = nextDelivery(now);
-  const where = `${DELIVERY_HOURS}, en la Universidad ESAN`;
-  if (d.offset === 0) return `Tu pedido de ahora se entrega hoy, ${where}.`;
-  return `Reserva tu pedido para ${d.label}, ${where}.`;
+  if (d.offset === 0) return `Para hoy ${d.dayName} · entrega ${DELIVERY_HOURS} en la Universidad ESAN`;
+  return `Reserva para ${d.label} · entrega ${DELIVERY_HOURS} en la Universidad ESAN`;
 }
 
-/** Aviso previo al pedido cuando ya no sale hoy (pasadas las 10 a. m. o día sin atención). null = sale hoy. */
+/** Aviso que hay que aceptar antes de pedir cuando el pedido ya no sale hoy. null = sale hoy. */
 export function lateNotice(now = new Date()): { title: string; body: string } | null {
   const d = nextDelivery(now);
   if (d.offset === 0) return null;
   if (d.closedToday) {
     return {
-      title: `Reserva tu pedido para ${d.label}`,
-      body: `Tu pedido se entregará ${d.label}, ${DELIVERY_HOURS}, en la Universidad ESAN.`,
+      title: `Tu pedido será para ${d.label}`,
+      body: `Los jueves y domingos no repartimos. Reserva ahora y te lo entregamos ${d.label}, ${DELIVERY_HOURS}, en la Universidad ESAN.`,
     };
   }
   return {
     title: "Hoy ya se repartieron los pedidos",
-    body: `Ya pasaron las 10 a. m. y los pedidos de hoy ya se repartieron. Puedes separar tu pedido para ${d.label}, ${DELIVERY_HOURS}, en la Universidad ESAN.`,
+    body: `Ya pasaron las 10 a. m. Reserva ahora y te lo entregamos ${d.label}, ${DELIVERY_HOURS}, en la Universidad ESAN.`,
   };
 }
 
@@ -164,7 +169,7 @@ export function buildFoodOrderWhatsAppUrl(opts: {
     `💰 Total a pagar: *${money(opts.total)}*`,
     `👤 Nombre: ${opts.name}`,
     `📱 Celular: ${opts.phone}`,
-    `📍 Entrega en ESAN (12:30 a 2 p. m.): ${opts.address}`,
+    `📍 Entrega en ESAN (12:30 a 2:00 p. m.): ${opts.address}`,
     ...(opts.forDay ? [`🕐 Para: ${opts.forDay}`] : []),
     ...(opts.reward ? [`🎁 Promo cartilla llena: ${REWARD_TEXT[opts.reward]}`] : []),
     ...(opts.note ? [`📝 Nota: ${opts.note}`] : []),

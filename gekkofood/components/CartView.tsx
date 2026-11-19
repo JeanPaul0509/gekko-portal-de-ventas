@@ -30,9 +30,11 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
-  const [when, setWhen] = useState("Entrega de 12:30 a 2 p. m. en la Universidad ESAN (reserva hasta las 10 a. m.).");
+  const [when, setWhen] = useState("Entrega de 12:30 a 2:00 p. m. en la Universidad ESAN (reserva hasta las 10 a. m.).");
   // Promo de la cartilla llena: "chaufa", "hamburguesa" o null (no usarla en este pedido)
   const [reward, setReward] = useState<Reward | null>("chaufa");
+  // Pieza que lleva el chaufa de la promo (itemId|side). Vacío = la primera del carrito.
+  const [promoKey, setPromoKey] = useState("");
   const [notice, setNotice] = useState<{ title: string; body: string } | null>(null);
   const [late, setLate] = useState(false); // true = el pedido ya no sale hoy
 
@@ -52,6 +54,14 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
     lines.filter((l) => !byId.has(l.itemId)).forEach((l) => remove(l.itemId, l.side));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, lines.length]);
+
+  const keyOf = (l: { itemId: string; side: string }) => `${l.itemId}|${l.side}`;
+  const promoLine = valid.find((l) => keyOf(l) === promoKey) ?? valid[0];
+
+  function orderedForPromo() {
+    if (!promoReady || reward !== "chaufa" || !promoLine) return valid;
+    return [promoLine, ...valid.filter((l) => l !== promoLine)];
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,7 +84,8 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
     const popup = window.open("about:blank", "_blank");
     const supabase = createClient();
     const { data, error } = await supabase.rpc("create_food_order", {
-      p_items: valid.map((l) => ({ item_id: l.itemId, qty: l.qty, side: l.side })),
+      // La base le pone el chaufa a la PRIMERA pieza de la lista, así que la elegida va primero
+      p_items: orderedForPromo().map((l) => ({ item_id: l.itemId, qty: l.qty, side: l.side })),
       p_name: name.trim(),
       p_address: address.trim(),
       p_note: note.trim(),
@@ -259,10 +270,24 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
                 {o.label}
               </label>
             ))}
-            {reward === "chaufa" && valid[0] && (
-              <p className="text-xs font-semibold text-ink/80">
-                Va en 1 pieza: {byId.get(valid[0].itemId)?.name}. Las demás piezas van normal.
-              </p>
+            {reward === "chaufa" && promoLine && (
+              <div className="rounded-lg bg-white p-3">
+                <label className="mb-1 block text-xs font-bold">¿Qué pieza quieres con chaufa?</label>
+                <select className="input" value={keyOf(promoLine)} onChange={(e) => setPromoKey(e.target.value)}>
+                  {valid.map((l) => (
+                    <option key={keyOf(l)} value={keyOf(l)}>
+                      {byId.get(l.itemId)?.name} ({sideLabel(l.side)})
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-ink/70">
+                  Solo 1 pieza lleva chaufa en vez de arroz blanco. Si no eliges, va en la primera de tu carrito. Las
+                  demás van normal.
+                </p>
+              </div>
+            )}
+            {reward === "hamburguesa" && (
+              <p className="text-xs font-semibold text-ink/80">La hamburguesa va aparte, además de tus piezas. Tus piezas van normal.</p>
             )}
           </fieldset>
         )}
