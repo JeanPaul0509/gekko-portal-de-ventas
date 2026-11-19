@@ -61,7 +61,7 @@ function OrderCard({ o }: { o: FoodOrder }) {
       </ul>
       {o.reward_choice && (
         <p className="mt-3 rounded-xl bg-gold-soft p-3 text-sm font-semibold">
-          🎁 Promo 8.º pedido: {REWARD_TEXT[o.reward_choice]}
+          🎁 Promo cartilla llena: {REWARD_TEXT[o.reward_choice]}
         </p>
       )}
       <p className="mt-3 flex justify-between border-t border-line pt-3 font-extrabold">

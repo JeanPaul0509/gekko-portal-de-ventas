@@ -70,20 +70,22 @@ export function deliveryLine(now = new Date()) {
   const d = nextDelivery(now);
   const where = `${DELIVERY_HOURS}, en la Universidad ESAN`;
   if (d.offset === 0) return `Tu pedido de ahora se entrega hoy, ${where}.`;
-  if (d.closedToday) return `Hoy no hay atención. Puedes reservar tu pedido, pero será para ${d.label}, ${where}.`;
-  return `Ya pasaron las 10 a. m. Puedes reservar tu pedido, pero ya no será para hoy: se entrega ${d.label}, ${where}.`;
+  return `Reserva tu pedido para ${d.label}, ${where}.`;
 }
 
 /** Aviso previo al pedido cuando ya no sale hoy (pasadas las 10 a. m. o día sin atención). null = sale hoy. */
 export function lateNotice(now = new Date()): { title: string; body: string } | null {
   const d = nextDelivery(now);
   if (d.offset === 0) return null;
-  const lead = d.closedToday
-    ? "Hoy no hay atención."
-    : "Ya pasaron las 10 a. m. y los pedidos de hoy ya se repartieron.";
+  if (d.closedToday) {
+    return {
+      title: `Reserva tu pedido para ${d.label}`,
+      body: `Tu pedido se entregará ${d.label}, ${DELIVERY_HOURS}, en la Universidad ESAN.`,
+    };
+  }
   return {
-    title: d.closedToday ? "Hoy no hay atención" : "Hoy ya se repartieron los pedidos",
-    body: `${lead} Puedes separar tu pedido para ${d.label}, ${DELIVERY_HOURS}, en la Universidad ESAN.`,
+    title: "Hoy ya se repartieron los pedidos",
+    body: `Ya pasaron las 10 a. m. y los pedidos de hoy ya se repartieron. Puedes separar tu pedido para ${d.label}, ${DELIVERY_HOURS}, en la Universidad ESAN.`,
   };
 }
 
@@ -159,7 +161,7 @@ export function buildFoodOrderWhatsAppUrl(opts: {
     `📱 Celular: ${opts.phone}`,
     `📍 Entrega en ESAN (12:30 a 2 p. m.): ${opts.address}`,
     ...(opts.forDay ? [`🕐 Para: ${opts.forDay}`] : []),
-    ...(opts.reward ? [`🎁 Promo 8.º pedido: ${REWARD_TEXT[opts.reward]}`] : []),
+    ...(opts.reward ? [`🎁 Promo cartilla llena: ${REWARD_TEXT[opts.reward]}`] : []),
     ...(opts.note ? [`📝 Nota: ${opts.note}`] : []),
     "",
     "📎 *Adjunto captura de Yape* 👇",

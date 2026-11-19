@@ -31,7 +31,7 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
   const [when, setWhen] = useState("Entrega de 12:30 a 2 p. m. en la Universidad ESAN (reserva hasta las 10 a. m.).");
-  // Promo del 8.º pedido: "chaufa", "hamburguesa" o null (no usarla en este pedido)
+  // Promo de la cartilla llena: "chaufa", "hamburguesa" o null (no usarla en este pedido)
   const [reward, setReward] = useState<Reward | null>("chaufa");
   const [notice, setNotice] = useState<{ title: string; body: string } | null>(null);
   const [late, setLate] = useState(false); // true = el pedido ya no sale hoy
@@ -245,7 +245,7 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
 
         {promoReady && (
           <fieldset className="space-y-2 rounded-xl border border-gold bg-gold-soft p-3">
-            <legend className="px-1 text-sm font-extrabold">🎁 Este es tu 8.º pedido: elige tu promo</legend>
+            <legend className="px-1 text-sm font-extrabold">🎁 Tu cartilla está llena: elige tu promo</legend>
             <p className="text-xs text-ink/70">Pagas tu pedido normal y te damos esto sin costo. Este pedido no suma punto.</p>
             {(
               [

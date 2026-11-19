@@ -33,16 +33,17 @@ export default async function CardPage() {
             hamburguesa.
           </p>
           <Link href="/menu" className="btn btn-gold inline-block">
-            Hacer mi 8.º pedido
+            Hacer mi pedido con promo
           </Link>
         </div>
       ) : (
         <div className="card p-5 text-sm text-ink/70">
           <p className="font-extrabold text-ink">¿Cómo funciona?</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Cada pedido pagado llena una bolita.</li>
-            <li>Con 7 bolitas, tu 8.º pedido es la promo: lo pagas normal y puedes pedir que te pongan chaufa en vez del arroz blanco, o una hamburguesa de regalo.</li>
-            <li>El 8.º pedido no suma punto. Desde el siguiente, la cartilla empieza de nuevo.</li>
+            <li>Cada pieza pagada llena una bolita: si pides 3 pechos, llenas 3.</li>
+            <li>La cartilla se llena con 7. Si pides más, se llena igual y no guarda las de más.</li>
+            <li>Con la cartilla llena, en tu siguiente pedido (lo pagas normal) pides chaufa en vez del arroz blanco, o una hamburguesa de regalo.</li>
+            <li>El pedido con la promo no suma. Desde el siguiente, la cartilla empieza de nuevo.</li>
           </ul>
         </div>
       )}
