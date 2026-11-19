@@ -25,7 +25,7 @@ export default function AuthShell({
           </p>
         </div>
         <ul className="anim-rise mt-8 space-y-2 text-sm text-white/70" style={{ ["--delay" as string]: "450ms" }}>
-          <li className="flex gap-2"><span className="text-gold">✓</span>Pollo broaster con papa sola o con arroz.</li>
+          <li className="flex gap-2"><span className="text-gold">✓</span>Pollo broaster con papa y arroz, o solo arroz.</li>
           <li className="flex gap-2"><span className="text-gold">✓</span>Pides en la app y pagas con Yape.</li>
           <li className="flex gap-2"><span className="text-gold">✓</span>Cada pedido llena una bolita: con 7, tu regalo.</li>
         </ul>

@@ -54,7 +54,7 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
       <div className="card p-6 text-center anim-modal">
         <p className="text-5xl">🎁</p>
         <h2 className="mt-2 text-2xl font-extrabold">¡Regalo pedido! N.º {done.orderNo}</h2>
-        <p className="mt-2 text-sm text-ink/70">{done.label}. Avísanos por WhatsApp para confirmar. Entrega de 1 a 2 p. m. en la Universidad ESAN.</p>
+        <p className="mt-2 text-sm text-ink/70">{done.label}. Avísanos por WhatsApp para confirmar. Entrega de 12:30 a 2 p. m. en la Universidad ESAN.</p>
         <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-green mt-5 inline-block w-full">
           Abrir WhatsApp de nuevo
         </a>

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import SafeImg from "@/components/SafeImg";
 import { createClient } from "@/lib/supabase/client";
-import { buildFoodOrderWhatsAppUrl, deliveryLine, MAX_QTY, sideLabel, type FoodItem, type Side } from "@/lib/food";
+import { buildFoodOrderWhatsAppUrl, deliveryLine, MAX_QTY, nextDelivery, sideLabel, type FoodItem, type Side } from "@/lib/food";
 import { money, plural, YAPE_NAME, YAPE_NUMBER } from "@/lib/utils";
 
 type Done = {
@@ -16,6 +16,8 @@ type Done = {
   phone: string;
   address: string;
   note: string | null;
+  forDay: string;
+  deliveryText: string;
 };
 
 export default function CartView({ items, phone }: { items: FoodItem[]; phone: string }) {
@@ -26,10 +28,12 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
-  const [when, setWhen] = useState("Entrega de 1 a 2 p. m. en la Universidad ESAN (pedidos hasta las 10 a. m.; lunes, martes, miércoles, viernes y sábado).");
+  const [when, setWhen] = useState("Entrega de 12:30 a 2 p. m. en la Universidad ESAN (reserva hasta las 10 a. m.).");
+  const [late, setLate] = useState(false); // true = el pedido ya no sale hoy
 
   useEffect(() => {
     setWhen(deliveryLine());
+    setLate(nextDelivery().offset > 0);
   }, []);
 
   const byId = new Map(items.map((i) => [i.id, i]));
@@ -81,6 +85,8 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
       phone,
       address: address.trim(),
       note: note.trim() || null,
+      forDay: nextDelivery().label,
+      deliveryText: deliveryLine(),
     };
     clear();
     setDone(result);
@@ -115,6 +121,7 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
           ) : null}{" "}
           y envíanos la captura por WhatsApp para confirmar tu pedido. Ya te abrimos WhatsApp con tu pedido escrito.
         </p>
+        <p className="mt-3 rounded-xl bg-gold-soft p-3 text-sm font-semibold text-ink">🕐 {done.deliveryText}</p>
         <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-green mt-5 inline-block w-full">
           Abrir WhatsApp de nuevo
         </a>
@@ -210,7 +217,13 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
           <input className="input" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Ej: sin ají" />
         </div>
 
-        <p className="rounded-xl bg-paper p-3 text-sm text-ink/70">🕐 {when}</p>
+        <p
+          className={`rounded-xl p-3 text-sm ${
+            late ? "border border-gold bg-gold-soft font-semibold text-ink" : "bg-paper text-ink/70"
+          }`}
+        >
+          🕐 {when}
+        </p>
 
         <div className="rounded-xl bg-paper p-4 text-sm">
           <div className="flex justify-between">

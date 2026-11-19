@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import SafeImg from "@/components/SafeImg";
-import { SIDES, type FoodItem, type Side } from "@/lib/food";
+import { SIDES, type CartSide, type FoodItem } from "@/lib/food";
 import { money, plural } from "@/lib/utils";
 
 function ItemCard({ item }: { item: FoodItem }) {
   const { add, lines } = useCart();
-  const [side, setSide] = useState<Side>("papa");
+  const [side, setSide] = useState<CartSide>("papa_arroz");
   const inCart = lines.filter((l) => l.itemId === item.id).reduce((a, l) => a + l.qty, 0);
 
   return (
@@ -19,7 +19,7 @@ function ItemCard({ item }: { item: FoodItem }) {
       </div>
       <p className="eyebrow text-gold-deep!">Broaster</p>
       <h3 className="mt-1 text-xl font-extrabold [overflow-wrap:anywhere]">{item.name}</h3>
-      <p className="mt-1 text-sm text-ink/60">Con papa o arroz, a tu elección.</p>
+      <p className="mt-1 text-sm text-ink/60">Elige papa y arroz, o solo arroz.</p>
 
       <div className="mt-4 grid grid-cols-2 gap-1.5 rounded-xl bg-paper p-1" role="radiogroup" aria-label={`Acompañamiento de ${item.name}`}>
         {SIDES.map((s) => (

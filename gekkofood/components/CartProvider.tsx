@@ -1,17 +1,17 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { MAX_QTY, type Side } from "@/lib/food";
+import { MAX_QTY, type CartSide } from "@/lib/food";
 
-export type CartLine = { itemId: string; side: Side; qty: number };
+export type CartLine = { itemId: string; side: CartSide; qty: number };
 
 type Ctx = {
   lines: CartLine[];
   count: number;
   ready: boolean;
-  add: (itemId: string, side: Side) => void;
-  setQty: (itemId: string, side: Side, qty: number) => void;
-  remove: (itemId: string, side: Side) => void;
+  add: (itemId: string, side: CartSide) => void;
+  setQty: (itemId: string, side: CartSide, qty: number) => void;
+  remove: (itemId: string, side: CartSide) => void;
   clear: () => void;
 };
 
@@ -23,7 +23,7 @@ function isLine(x: unknown): x is CartLine {
   const l = x as Record<string, unknown>;
   return (
     typeof l.itemId === "string" &&
-    (l.side === "papa" || l.side === "arroz") &&
+    (l.side === "papa_arroz" || l.side === "arroz") &&
     typeof l.qty === "number" &&
     l.qty >= 1
   );
@@ -53,7 +53,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [lines, ready]);
 
-  const add = useCallback((itemId: string, side: Side) => {
+  const add = useCallback((itemId: string, side: CartSide) => {
     setLines((prev) => {
       const i = prev.findIndex((l) => l.itemId === itemId && l.side === side);
       if (i === -1) return [...prev, { itemId, side, qty: 1 }];
@@ -61,7 +61,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const setQty = useCallback((itemId: string, side: Side, qty: number) => {
+  const setQty = useCallback((itemId: string, side: CartSide, qty: number) => {
     setLines((prev) =>
       qty < 1
         ? prev.filter((l) => !(l.itemId === itemId && l.side === side))
@@ -69,7 +69,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  const remove = useCallback((itemId: string, side: Side) => {
+  const remove = useCallback((itemId: string, side: CartSide) => {
     setLines((prev) => prev.filter((l) => !(l.itemId === itemId && l.side === side)));
   }, []);
 

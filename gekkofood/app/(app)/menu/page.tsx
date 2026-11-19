@@ -1,6 +1,6 @@
 import LoyaltyCard from "@/components/LoyaltyCard";
 import MenuView from "@/components/MenuView";
-import { DELIVERY_NOTE, deliveryLine, EMPTY_CARD, type FoodCard, type FoodItem } from "@/lib/food";
+import { DELIVERY_NOTE, deliveryLine, EMPTY_CARD, nextDelivery, type FoodCard, type FoodItem } from "@/lib/food";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MenuPage() {
@@ -22,9 +22,15 @@ export default async function MenuPage() {
         </h1>
         <hr className="gold-rule-center mx-auto my-5 max-w-xs" />
         <p className="mx-auto max-w-md text-sm text-white/70">{DELIVERY_NOTE}</p>
-        <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-gold">{deliveryLine()}</p>
+        <p
+          className={`mx-auto mt-3 max-w-md rounded-xl px-4 py-3 text-sm font-semibold ${
+            nextDelivery().offset > 0 ? "border border-gold bg-gold/15 text-gold" : "text-gold"
+          }`}
+        >
+          🕐 {deliveryLine()}
+        </p>
         <p className="mt-3 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-gold/80">
-          Papa sola ◆ Con arroz ◆ Paga con Yape
+          Papa y arroz ◆ Solo arroz ◆ Paga con Yape
         </p>
       </section>
 

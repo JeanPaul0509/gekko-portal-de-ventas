@@ -1,6 +1,9 @@
 import { money, WHATSAPP_NUMBER } from "@/lib/utils";
 
-export type Side = "papa" | "arroz";
+/** papa_arroz = papa y arroz (la de siempre) · arroz = solo arroz · papa = papa sola (solo pedidos antiguos) */
+export type Side = "papa" | "papa_arroz" | "arroz";
+/** Lo que se puede elegir hoy en el carrito. */
+export type CartSide = "papa_arroz" | "arroz";
 export type FoodStatus = "pending" | "paid" | "delivered" | "cancelled";
 
 export type FoodItem = { id: string; name: string; price: number; active: boolean; sort: number; image_url: string | null };
@@ -27,7 +30,7 @@ export const FOOD_GOAL = 7;
 export const EMPTY_CARD: FoodCard = { points: 0, goal: FOOD_GOAL, reward_ready: false };
 
 export const DELIVERY_NOTE =
-  "Pide hasta las 10 a. m. y recibe de 1 a 2 p. m. en la Universidad ESAN. Atendemos lunes, martes, miércoles, viernes y sábado.";
+  "Reserva tu pedido hasta las 10 a. m. y recíbelo de 12:30 a 2 p. m. en la Universidad ESAN. Atendemos lunes, martes, miércoles, viernes y sábado.";
 export const DELIVERY_PLACE = "Universidad ESAN";
 /** Hora límite (Lima) para que el pedido salga ese mismo día. */
 export const CUTOFF_HOUR = 10;
@@ -59,23 +62,27 @@ export function nextDelivery(now = new Date()) {
   return { offset, label, closedToday, afterCutoff: hour >= CUTOFF_HOUR };
 }
 
+export const DELIVERY_HOURS = "de 12:30 a 2 p. m.";
+
 export function deliveryLine(now = new Date()) {
   const d = nextDelivery(now);
-  const prefix = d.offset === 0 ? "" : d.closedToday ? "Hoy no hay atención. " : "Ya pasaron las 10 a. m.: ";
-  const start = prefix ? "tu pedido de ahora" : "Tu pedido de ahora";
-  return `${prefix}${start} se entrega ${d.label}, de 1 a 2 p. m., en la Universidad ESAN.`;
+  const where = `${DELIVERY_HOURS}, en la Universidad ESAN`;
+  if (d.offset === 0) return `Tu pedido de ahora se entrega hoy, ${where}.`;
+  if (d.closedToday) return `Hoy no hay atención. Puedes reservar tu pedido, pero será para ${d.label}, ${where}.`;
+  return `Ya pasaron las 10 a. m. Puedes reservar tu pedido, pero ya no será para hoy: se entrega ${d.label}, ${where}.`;
 }
 
 export const MAX_QTY = 20;
 
-export const SIDES: { key: Side; label: string }[] = [
-  { key: "papa", label: "Papa sola" },
-  { key: "arroz", label: "Con arroz" },
+export const SIDES: { key: CartSide; label: string }[] = [
+  { key: "papa_arroz", label: "Papa y arroz" },
+  { key: "arroz", label: "Solo arroz" },
 ];
 
 export function sideLabel(side: Side | null | undefined) {
+  if (side === "papa_arroz") return "papa y arroz";
+  if (side === "arroz") return "solo arroz";
   if (side === "papa") return "papa sola";
-  if (side === "arroz") return "con arroz";
   return "";
 }
 
@@ -116,6 +123,8 @@ export function buildFoodOrderWhatsAppUrl(opts: {
   note?: string | null;
   items: Line[];
   total: number;
+  /** "hoy", "mañana", "el viernes"... según la hora en que se pidió */
+  forDay?: string;
 }) {
   const text = [
     `¡Hola! 👋 Hice el pedido *N.º ${opts.orderNo}* en Gekko Food:`,
@@ -125,7 +134,8 @@ export function buildFoodOrderWhatsAppUrl(opts: {
     `💰 Total a pagar: *${money(opts.total)}*`,
     `👤 Nombre: ${opts.name}`,
     `📱 Celular: ${opts.phone}`,
-    `📍 Entrega en ESAN (1 a 2 p. m.): ${opts.address}`,
+    `📍 Entrega en ESAN (12:30 a 2 p. m.): ${opts.address}`,
+    ...(opts.forDay ? [`🕐 Para: ${opts.forDay}`] : []),
     ...(opts.note ? [`📝 Nota: ${opts.note}`] : []),
     "",
     "📎 *Adjunto captura de Yape* 👇",
@@ -150,7 +160,7 @@ export function buildRewardWhatsAppUrl(opts: {
     "",
     `👤 Nombre: ${opts.name}`,
     `📱 Celular: ${opts.phone}`,
-    `📍 Entrega en ESAN (1 a 2 p. m.): ${opts.address}`,
+    `📍 Entrega en ESAN (12:30 a 2 p. m.): ${opts.address}`,
     ...(opts.note ? [`📝 Nota: ${opts.note}`] : []),
   ].join("\n");
   return `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(text)}`;
