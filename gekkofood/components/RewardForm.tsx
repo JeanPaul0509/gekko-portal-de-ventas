@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import LateOrderModal from "@/components/LateOrderModal";
 import { createClient } from "@/lib/supabase/client";
-import { buildRewardWhatsAppUrl, type FoodItem } from "@/lib/food";
+import { buildRewardWhatsAppUrl, lateNotice, type FoodItem } from "@/lib/food";
 import { money } from "@/lib/utils";
 
 type Choice = "chaufa" | "hamburguesa";
@@ -16,6 +17,7 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState<{ title: string; body: string } | null>(null);
   const [done, setDone] = useState<{ orderNo: number; label: string; name: string; address: string; note: string | null } | null>(null);
 
   async function submit(e: React.FormEvent) {
@@ -25,6 +27,14 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
     if (!address.trim()) return setError("Escribe dónde te encontramos en ESAN.");
     if (choice === "chaufa" && !itemId) return setError("Elige la pieza de tu broaster.");
 
+    // Si el pedido ya no sale hoy, primero hay que aceptar el aviso
+    const n = lateNotice();
+    if (n) return setNotice(n);
+    await place();
+  }
+
+  async function place() {
+    setError(null);
     setLoading(true);
     const popup = window.open("about:blank", "_blank"); // se abre con el toque para que no lo bloqueen
     const { data, error } = await createClient().rpc("create_food_reward", {
@@ -67,15 +77,26 @@ export default function RewardForm({ items, phone }: { items: FoodItem[]; phone:
 
   return (
     <form onSubmit={submit} className="card space-y-4 p-5">
+      {notice && (
+        <LateOrderModal
+          title={notice.title}
+          body={notice.body}
+          onCancel={() => setNotice(null)}
+          onAccept={() => {
+            setNotice(null);
+            void place();
+          }}
+        />
+      )}
       <div>
         <p className="eyebrow text-gold-deep!">Canjear regalo</p>
-        <h2 className="font-display text-2xl font-semibold">Elige tu regalo</h2>
+        <h2 className="font-display text-2xl font-semibold">Tu 8.º pedido es de regalo</h2>
       </div>
 
       <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Regalo">
         {(
           [
-            { key: "chaufa", label: "🍗 Broaster con chaufa" },
+            { key: "chaufa", label: "🍗 Broaster con chaufa (en vez del arroz blanco)" },
             { key: "hamburguesa", label: "🍔 Hamburguesa" },
           ] as { key: Choice; label: string }[]
         ).map((c) => (

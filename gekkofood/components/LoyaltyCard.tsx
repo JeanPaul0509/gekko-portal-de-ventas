@@ -13,7 +13,7 @@ export default function LoyaltyCard({ card, compact = false }: { card: FoodCard;
         <div>
           <p className="eyebrow text-gold-deep!">Tu cartilla</p>
           <h2 className="font-display text-[1.6rem] font-semibold leading-tight">
-            {card.reward_ready ? "¡Tu regalo está listo!" : `${card.points} de ${goal} pedidos`}
+            {card.reward_ready ? "¡Tu 8.º pedido es de regalo!" : `${card.points} de ${goal} pedidos`}
           </h2>
         </div>
         {compact && (
@@ -35,12 +35,12 @@ export default function LoyaltyCard({ card, compact = false }: { card: FoodCard;
       <hr className="gold-rule my-4" />
       <p className="text-sm text-ink/70">
         {card.reward_ready
-          ? "Completaste tus pedidos. En tu siguiente pedido pide tu broaster con chaufa o una hamburguesa de regalo."
-          : `Te ${left === 1 ? "falta" : "faltan"} ${plural(left, "pedido", "pedidos")} para tu regalo: broaster con chaufa o hamburguesa.`}
+          ? "Completaste tus 7 pedidos. Tu 8.º pedido es la promo: pide tu broaster con chaufa en vez del arroz blanco, o una hamburguesa."
+          : `Te ${left === 1 ? "falta" : "faltan"} ${plural(left, "pedido", "pedidos")} para tu regalo. Tu 8.º pedido es la promo: broaster con chaufa (en vez del arroz blanco) o hamburguesa.`}
       </p>
       {!compact && (
         <p className="mt-2 text-xs text-ink/50">
-          Cada pedido pagado llena una bolita. El pedido de regalo no suma punto; desde el siguiente, la cartilla empieza de nuevo.
+          Cada pedido pagado llena una bolita. El 8.º pedido (el de regalo) no suma punto; desde el siguiente, la cartilla empieza de nuevo.
         </p>
       )}
     </section>

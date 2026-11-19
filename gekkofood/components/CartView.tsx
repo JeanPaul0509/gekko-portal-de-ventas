@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "@/components/CartProvider";
+import LateOrderModal from "@/components/LateOrderModal";
 import SafeImg from "@/components/SafeImg";
 import { createClient } from "@/lib/supabase/client";
-import { buildFoodOrderWhatsAppUrl, deliveryLine, MAX_QTY, nextDelivery, sideLabel, type FoodItem, type Side } from "@/lib/food";
+import { buildFoodOrderWhatsAppUrl, deliveryLine, lateNotice, MAX_QTY, nextDelivery, sideLabel, type FoodItem, type Side } from "@/lib/food";
 import { money, plural, YAPE_NAME, YAPE_NUMBER } from "@/lib/utils";
 
 type Done = {
@@ -29,6 +30,7 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
   const [when, setWhen] = useState("Entrega de 12:30 a 2 p. m. en la Universidad ESAN (reserva hasta las 10 a. m.).");
+  const [notice, setNotice] = useState<{ title: string; body: string } | null>(null);
   const [late, setLate] = useState(false); // true = el pedido ya no sale hoy
 
   useEffect(() => {
@@ -55,6 +57,14 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
     if (!name.trim()) return setError("Escribe tu nombre.");
     if (!address.trim()) return setError("Escribe dónde te encontramos en ESAN.");
 
+    // Si el pedido ya no sale hoy, primero hay que aceptar el aviso
+    const n = lateNotice();
+    if (n) return setNotice(n);
+    await place();
+  }
+
+  async function place() {
+    setError(null);
     setLoading(true);
     // Se abre una pestaña YA (con el toque del botón) para que el navegador no bloquee WhatsApp;
     // cuando el pedido se guarda, esa pestaña se manda a WhatsApp.
@@ -149,6 +159,17 @@ export default function CartView({ items, phone }: { items: FoodItem[]; phone: s
 
   return (
     <form onSubmit={submit} className="mx-auto grid max-w-4xl gap-6 md:grid-cols-[1.2fr_1fr]">
+      {notice && (
+        <LateOrderModal
+          title={notice.title}
+          body={notice.body}
+          onCancel={() => setNotice(null)}
+          onAccept={() => {
+            setNotice(null);
+            void place();
+          }}
+        />
+      )}
       <section className="space-y-3">
         <h1 className="font-display text-3xl font-semibold text-white">Tu carrito</h1>
         {removed > 0 && (

@@ -72,6 +72,19 @@ export function deliveryLine(now = new Date()) {
   return `Ya pasaron las 10 a. m. Puedes reservar tu pedido, pero ya no será para hoy: se entrega ${d.label}, ${where}.`;
 }
 
+/** Aviso previo al pedido cuando ya no sale hoy (pasadas las 10 a. m. o día sin atención). null = sale hoy. */
+export function lateNotice(now = new Date()): { title: string; body: string } | null {
+  const d = nextDelivery(now);
+  if (d.offset === 0) return null;
+  const lead = d.closedToday
+    ? "Hoy no hay atención."
+    : "Ya pasaron las 10 a. m. y los pedidos de hoy ya se repartieron.";
+  return {
+    title: d.closedToday ? "Hoy no hay atención" : "Hoy ya se repartieron los pedidos",
+    body: `${lead} Puedes separar tu pedido para ${d.label}, ${DELIVERY_HOURS}, en la Universidad ESAN.`,
+  };
+}
+
 export const MAX_QTY = 20;
 
 export const SIDES: { key: CartSide; label: string }[] = [

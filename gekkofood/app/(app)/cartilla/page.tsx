@@ -40,8 +40,8 @@ export default async function CardPage() {
           <p className="font-extrabold text-ink">¿Cómo funciona?</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Cada pedido pagado llena una bolita.</li>
-            <li>Con 7 bolitas, tu siguiente pedido es un regalo: una pieza de broaster con chaufa o una hamburguesa.</li>
-            <li>El pedido de regalo no suma punto. Desde el siguiente, la cartilla empieza de nuevo.</li>
+            <li>Con 7 bolitas, tu 8.º pedido es la promo: una pieza de broaster con chaufa (en vez del arroz blanco) o una hamburguesa, de regalo.</li>
+            <li>El 8.º pedido no suma punto. Desde el siguiente, la cartilla empieza de nuevo.</li>
           </ul>
         </div>
       )}
