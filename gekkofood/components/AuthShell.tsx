@@ -30,7 +30,7 @@ export default function AuthShell({
           <li className="flex gap-2"><span className="text-gold">✓</span>Cada pieza llena una bolita: con 7, tu siguiente pedido trae regalo.</li>
         </ul>
         <p className="mt-8 text-center text-xs text-white/50">
-          <a href="https://gekkoperu.vercel.app/terminos" className="underline underline-offset-4 hover:text-white">
+          <a href="/terminos" className="underline underline-offset-4 hover:text-white">
             Términos y condiciones
           </a>
         </p>

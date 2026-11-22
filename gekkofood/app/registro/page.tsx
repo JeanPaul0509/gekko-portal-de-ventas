@@ -77,7 +77,7 @@ export default function RegisterPage() {
         </button>
         <p className="text-center text-xs text-gray-500">
           Al crear tu cuenta aceptas los{" "}
-          <a href="https://gekkoperu.vercel.app/terminos" className="font-semibold text-violet-700 underline">
+          <a href="/terminos" className="font-semibold text-violet-700 underline">
             términos y condiciones
           </a>
           .

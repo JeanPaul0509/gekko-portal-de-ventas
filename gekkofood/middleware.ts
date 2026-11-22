@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const AUTH_ROUTES = ["/login", "/registro"]; // solo sin sesión
+const OPEN_ROUTES = ["/terminos"]; // con o sin sesión
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -29,6 +30,7 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthPage = AUTH_ROUTES.some((r) => path.startsWith(r));
+  if (OPEN_ROUTES.some((r) => path.startsWith(r))) return response;
 
   if (!user && !isAuthPage) {
     const url = request.nextUrl.clone();

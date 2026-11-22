@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           Ir a Gekko: pollo aderezado, belleza y sorteos
         </a>
         <a
-          href="https://gekkoperu.vercel.app/terminos"
+          href="/terminos"
           className="underline decoration-white/30 underline-offset-4 hover:text-white"
         >
           Términos y condiciones
