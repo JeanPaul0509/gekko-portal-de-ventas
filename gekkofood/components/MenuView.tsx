@@ -7,10 +7,9 @@ import SafeImg from "@/components/SafeImg";
 import { SIDES, type CartSide, type FoodItem } from "@/lib/food";
 import { money, plural } from "@/lib/utils";
 
-function ItemCard({ item, drink }: { item: FoodItem; drink?: FoodItem }) {
+function ItemCard({ item }: { item: FoodItem }) {
   const { add, lines } = useCart();
   const [side, setSide] = useState<CartSide>("papa_arroz");
-  const [withDrink, setWithDrink] = useState(false);
   const inCart = lines.filter((l) => l.itemId === item.id).reduce((a, l) => a + l.qty, 0);
 
   return (
@@ -39,21 +38,10 @@ function ItemCard({ item, drink }: { item: FoodItem; drink?: FoodItem }) {
         ))}
       </div>
 
-      {drink && (
-        <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold">
-          <input type="checkbox" checked={withDrink} onChange={(e) => setWithDrink(e.target.checked)} />
-          🥤 Agregar {drink.name.toLowerCase()} <span className="ml-auto text-violet-700">+{money(drink.price)}</span>
-        </label>
-      )}
-
       <hr className="gold-rule my-4" />
       <div className="mt-auto flex items-center justify-between gap-3">
         <p className="text-[1.6rem] font-extrabold tracking-tight text-violet-700">{money(item.price)}</p>
-        <button type="button" className="btn btn-primary" onClick={() => {
-            add(item.id, side);
-            if (drink && withDrink) add(drink.id, "sin");
-            setWithDrink(false);
-          }}>
+        <button type="button" className="btn btn-primary" onClick={() => add(item.id, side)}>
           Agregar
         </button>
       </div>
@@ -99,7 +87,7 @@ export default function MenuView({ items }: { items: FoodItem[] }) {
         {pieces.map((it, i) => (
           <div key={it.id} className="anim-rise flex" style={{ ["--delay" as string]: `${120 + i * 60}ms` }}>
             <div className="flex w-full flex-col [&>article]:flex-1">
-              <ItemCard item={it} drink={drinks[0]} />
+              <ItemCard item={it} />
             </div>
           </div>
         ))}

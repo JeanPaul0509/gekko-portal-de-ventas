@@ -198,7 +198,7 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
         {valid.map((l) => {
           const it = byId.get(l.itemId)!;
           return (
-            <div key={l.itemId + l.side} className="card flex items-center justify-between gap-3 p-4">
+            <div key={l.itemId + l.side} className="card flex flex-wrap items-center justify-between gap-3 p-4">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gold-soft">
                 <SafeImg src={it.image_url} alt={it.name} icon={it.kind === "bebida" ? "🥤" : "🍗"} iconClassName="text-2xl" className="h-full w-full object-cover" />
               </div>
@@ -207,6 +207,17 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
                 <p className="text-sm text-ink/60">{it.kind === "bebida" ? "Bebida" : sideLabel(l.side)}</p>
                 <p className="text-sm font-bold text-violet-700">{money(it.price * l.qty)}</p>
               </div>
+              {it.kind !== "bebida" && drinks[0] && (
+                <button
+                  type="button"
+                  onClick={() => add(drinks[0].id, "sin")}
+                  title={`Agregar ${drinks[0].name.toLowerCase()} (${money(drinks[0].price)})`}
+                  className="shrink-0 rounded-full border border-gold bg-gold-soft px-3 py-2 text-xs font-bold leading-tight text-ink transition hover:bg-gold/30"
+                >
+                  🥤 + {drinks[0].name}
+                  <span className="block text-[0.7rem] text-violet-700">{money(drinks[0].price)}</span>
+                </button>
+              )}
               <div className="flex items-center gap-1 rounded-full bg-paper p-1">
                 <button
                   type="button"
@@ -230,18 +241,6 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
             </div>
           );
         })}
-        {drinks
-          .filter((d) => !valid.some((l) => l.itemId === d.id))
-          .map((d) => (
-            <div key={d.id} className="card flex items-center justify-between gap-3 border border-gold p-4">
-              <p className="text-sm font-bold">
-                🥤 ¿Agregas un {d.name.toLowerCase()}? <span className="text-violet-700">{money(d.price)}</span>
-              </p>
-              <button type="button" className="btn btn-gold" onClick={() => add(d.id, "sin")}>
-                Agregar
-              </button>
-            </div>
-          ))}
         <Link href="/menu" className="inline-block text-sm font-semibold text-gold underline underline-offset-4">
           ← Seguir pidiendo
         </Link>
