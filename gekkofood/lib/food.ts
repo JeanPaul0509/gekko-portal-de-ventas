@@ -4,10 +4,11 @@ import { money, WHATSAPP_NUMBER } from "@/lib/utils";
 export type Side = "papa" | "papa_arroz" | "arroz" | "papa_chaufa" | "chaufa";
 export type Reward = "chaufa" | "hamburguesa";
 /** Lo que se puede elegir hoy en el carrito. */
-export type CartSide = "papa_arroz" | "arroz";
+export type CartSide = "papa_arroz" | "arroz" | "sin"; // "sin" = bebidas (no llevan acompañamiento)
+export type FoodKind = "pieza" | "bebida";
 export type FoodStatus = "pending" | "paid" | "delivered" | "cancelled";
 
-export type FoodItem = { id: string; name: string; price: number; active: boolean; sort: number; image_url: string | null };
+export type FoodItem = { id: string; name: string; price: number; active: boolean; sort: number; image_url: string | null; kind: FoodKind };
 export type FoodCard = { points: number; goal: number; reward_ready: boolean };
 
 export type FoodOrderItem = { id: number; name: string; side: Side | null; price: number; qty: number };
@@ -101,7 +102,7 @@ export const SIDES: { key: CartSide; label: string }[] = [
   { key: "arroz", label: "Solo arroz" },
 ];
 
-export function sideLabel(side: Side | null | undefined) {
+export function sideLabel(side: Side | CartSide | null | undefined) {
   if (side === "papa_arroz") return "papa y arroz";
   if (side === "arroz") return "solo arroz";
   if (side === "papa_chaufa") return "papa y chaufa";

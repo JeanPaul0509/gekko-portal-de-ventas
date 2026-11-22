@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminMenuPage() {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("food_items").select("id, name, price, active, sort, image_url").order("sort");
+  const { data, error } = await supabase.from("food_items").select("id, name, price, active, sort, image_url, kind").order("sort");
   const items = ((data ?? []) as FoodItem[]).map((i) => ({ ...i, price: Number(i.price) }));
 
   return (

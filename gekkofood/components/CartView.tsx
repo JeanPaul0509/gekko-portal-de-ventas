@@ -23,7 +23,7 @@ type Done = {
 };
 
 export default function CartView({ items, phone, promoReady }: { items: FoodItem[]; phone: string; promoReady: boolean }) {
-  const { lines, ready, setQty, remove, clear } = useCart();
+  const { lines, ready, add, setQty, remove, clear } = useCart();
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [note, setNote] = useState("");
@@ -56,7 +56,9 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
   }, [ready, lines.length]);
 
   const keyOf = (l: { itemId: string; side: string }) => `${l.itemId}|${l.side}`;
-  const promoLine = valid.find((l) => keyOf(l) === promoKey) ?? valid[0];
+  const pieceLines = valid.filter((l) => byId.get(l.itemId)?.kind !== "bebida");
+  const promoLine = pieceLines.find((l) => keyOf(l) === promoKey) ?? pieceLines[0];
+  const drinks = items.filter((i) => i.kind === "bebida");
 
   function orderedForPromo() {
     if (!promoReady || reward !== "chaufa" || !promoLine) return valid;
@@ -198,11 +200,11 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
           return (
             <div key={l.itemId + l.side} className="card flex items-center justify-between gap-3 p-4">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gold-soft">
-                <SafeImg src={it.image_url} alt={it.name} icon="🍗" iconClassName="text-2xl" className="h-full w-full object-cover" />
+                <SafeImg src={it.image_url} alt={it.name} icon={it.kind === "bebida" ? "🥤" : "🍗"} iconClassName="text-2xl" className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-extrabold [overflow-wrap:anywhere]">{it.name}</p>
-                <p className="text-sm text-ink/60">{sideLabel(l.side)}</p>
+                <p className="text-sm text-ink/60">{it.kind === "bebida" ? "Bebida" : sideLabel(l.side)}</p>
                 <p className="text-sm font-bold text-violet-700">{money(it.price * l.qty)}</p>
               </div>
               <div className="flex items-center gap-1 rounded-full bg-paper p-1">
@@ -228,6 +230,18 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
             </div>
           );
         })}
+        {drinks
+          .filter((d) => !valid.some((l) => l.itemId === d.id))
+          .map((d) => (
+            <div key={d.id} className="card flex items-center justify-between gap-3 border border-gold p-4">
+              <p className="text-sm font-bold">
+                🥤 ¿Agregas un {d.name.toLowerCase()}? <span className="text-violet-700">{money(d.price)}</span>
+              </p>
+              <button type="button" className="btn btn-gold" onClick={() => add(d.id, "sin")}>
+                Agregar
+              </button>
+            </div>
+          ))}
         <Link href="/menu" className="inline-block text-sm font-semibold text-gold underline underline-offset-4">
           ← Seguir pidiendo
         </Link>
@@ -270,11 +284,14 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
                 {o.label}
               </label>
             ))}
+            {reward === "chaufa" && !promoLine && (
+              <p className="text-xs font-semibold text-red-700">Agrega al menos una pieza de pollo para usar el chaufa.</p>
+            )}
             {reward === "chaufa" && promoLine && (
               <div className="rounded-lg bg-white p-3">
                 <label className="mb-1 block text-xs font-bold">¿Qué pieza quieres con chaufa?</label>
                 <select className="input" value={keyOf(promoLine)} onChange={(e) => setPromoKey(e.target.value)}>
-                  {valid.map((l) => (
+                  {pieceLines.map((l) => (
                     <option key={keyOf(l)} value={keyOf(l)}>
                       {byId.get(l.itemId)?.name} ({sideLabel(l.side)})
                     </option>

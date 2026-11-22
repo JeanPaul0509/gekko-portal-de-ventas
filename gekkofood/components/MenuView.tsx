@@ -50,10 +50,32 @@ function ItemCard({ item }: { item: FoodItem }) {
   );
 }
 
+function DrinkCard({ item }: { item: FoodItem }) {
+  const { add, lines } = useCart();
+  const inCart = lines.filter((l) => l.itemId === item.id).reduce((a, l) => a + l.qty, 0);
+  return (
+    <article className="card-lux flex items-center gap-4 p-4">
+      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gold-soft">
+        <SafeImg src={item.image_url} alt={item.name} icon="🥤" iconClassName="text-3xl" className="h-full w-full object-cover" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-lg font-extrabold [overflow-wrap:anywhere]">{item.name}</h3>
+        <p className="text-lg font-extrabold text-violet-700">{money(item.price)}</p>
+        {inCart > 0 && <p className="text-xs font-semibold text-gold-deep">{plural(inCart, "unidad", "unidades")} en tu carrito</p>}
+      </div>
+      <button type="button" className="btn btn-primary" onClick={() => add(item.id, "sin")}>
+        Agregar
+      </button>
+    </article>
+  );
+}
+
 export default function MenuView({ items }: { items: FoodItem[] }) {
   const { lines, count } = useCart();
   const byId = new Map(items.map((i) => [i.id, i]));
   const total = lines.reduce((a, l) => a + (byId.get(l.itemId)?.price ?? 0) * l.qty, 0);
+  const pieces = items.filter((i) => i.kind !== "bebida");
+  const drinks = items.filter((i) => i.kind === "bebida");
 
   if (items.length === 0) {
     return <p className="text-center text-sm text-white/60">Pronto tendremos el menú disponible.</p>;
@@ -62,7 +84,7 @@ export default function MenuView({ items }: { items: FoodItem[] }) {
   return (
     <>
       <div className="grid gap-5 sm:grid-cols-2">
-        {items.map((it, i) => (
+        {pieces.map((it, i) => (
           <div key={it.id} className="anim-rise flex" style={{ ["--delay" as string]: `${120 + i * 60}ms` }}>
             <div className="flex w-full flex-col [&>article]:flex-1">
               <ItemCard item={it} />
@@ -70,6 +92,17 @@ export default function MenuView({ items }: { items: FoodItem[] }) {
           </div>
         ))}
       </div>
+
+      {drinks.length > 0 && (
+        <section className="mt-8 space-y-3">
+          <h2 className="font-display text-2xl font-semibold text-white">Bebidas</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {drinks.map((d) => (
+              <DrinkCard key={d.id} item={d} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {count > 0 && (
         <div className="anim-sheet fixed inset-x-0 bottom-0 z-40 border-t border-gold/30 bg-white/95 backdrop-blur-md">

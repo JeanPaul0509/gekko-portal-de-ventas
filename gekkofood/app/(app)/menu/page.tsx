@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 export default async function MenuPage() {
   const supabase = await createClient();
   const [itemsRes, cardRes] = await Promise.all([
-    supabase.from("food_items").select("id, name, price, active, sort, image_url").eq("active", true).order("sort"),
+    supabase.from("food_items").select("id, name, price, active, sort, image_url, kind").eq("active", true).order("sort"),
     supabase.rpc("food_card"),
   ]);
 

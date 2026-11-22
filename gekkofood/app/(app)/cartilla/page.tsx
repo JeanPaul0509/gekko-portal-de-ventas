@@ -40,7 +40,7 @@ export default async function CardPage() {
         <div className="card p-5 text-sm text-ink/70">
           <p className="font-extrabold text-ink">¿Cómo funciona?</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Cada pieza pagada llena una bolita: si pides 3 pechos, llenas 3.</li>
+            <li>Cada pieza de pollo pagada llena una bolita: si pides 3 pechos, llenas 3. El refresco no suma.</li>
             <li>La cartilla se llena con 7. Si pides más, se llena igual y no guarda las de más.</li>
             <li>Con la cartilla llena, en tu siguiente pedido (lo pagas normal) pides chaufa en vez del arroz blanco, o una hamburguesa de regalo.</li>
             <li>El pedido con la promo no suma. Desde el siguiente, la cartilla empieza de nuevo.</li>

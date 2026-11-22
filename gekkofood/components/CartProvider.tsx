@@ -23,7 +23,7 @@ function isLine(x: unknown): x is CartLine {
   const l = x as Record<string, unknown>;
   return (
     typeof l.itemId === "string" &&
-    (l.side === "papa_arroz" || l.side === "arroz") &&
+    (l.side === "papa_arroz" || l.side === "arroz" || l.side === "sin") &&
     typeof l.qty === "number" &&
     l.qty >= 1
   );

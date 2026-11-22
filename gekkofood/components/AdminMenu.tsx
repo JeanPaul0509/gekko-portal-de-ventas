@@ -127,7 +127,12 @@ function Row({ item }: { item: FoodItem }) {
 
   return (
     <div className="card space-y-3 p-4">
-      <PhotoPicker current={item.image_url} file={file} onFile={setFile} removed={removed} onRemove={() => setRemoved(true)} />
+      <div className="flex items-center justify-between gap-3">
+        <PhotoPicker current={item.image_url} file={file} onFile={setFile} removed={removed} onRemove={() => setRemoved(true)} />
+        <span className="rounded-full bg-paper px-3 py-1 text-xs font-bold">
+          {item.kind === "bebida" ? "🥤 Bebida" : "🍗 Pieza"}
+        </span>
+      </div>
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-[8rem] flex-1">
           <label className="mb-1 block text-xs font-medium">Nombre</label>
@@ -154,6 +159,7 @@ export default function AdminMenu({ items }: { items: FoodItem[] }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [kind, setKind] = useState<"pieza" | "bebida">("pieza");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -168,7 +174,7 @@ export default function AdminMenu({ items }: { items: FoodItem[] }) {
     try {
       const image_url = file ? await uploadPhoto(file) : null;
       const sort = items.reduce((m, i) => Math.max(m, i.sort), 0) + 1;
-      const { error } = await createClient().from("food_items").insert({ name: name.trim(), price: p, sort, image_url });
+      const { error } = await createClient().from("food_items").insert({ name: name.trim(), price: p, sort, image_url, kind });
       if (error) throw new Error(error.message);
       setName("");
       setPrice("");
@@ -191,7 +197,13 @@ export default function AdminMenu({ items }: { items: FoodItem[] }) {
       ))}
 
       <form onSubmit={add} className="card space-y-3 p-4">
-        <p className="text-sm font-extrabold">Nueva pieza</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-extrabold">Nuevo producto</p>
+          <select className="input w-auto" value={kind} onChange={(e) => setKind(e.target.value as "pieza" | "bebida")}>
+            <option value="pieza">🍗 Pieza de pollo (lleva papa/arroz y suma a la cartilla)</option>
+            <option value="bebida">🥤 Bebida (sin acompañamiento, no suma)</option>
+          </select>
+        </div>
         <PhotoPicker current={null} file={file} onFile={setFile} />
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[8rem] flex-1">
