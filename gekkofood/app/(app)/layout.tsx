@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { CartProvider } from "@/components/CartProvider";
 import Header from "@/components/Header";
 import { createClient } from "@/lib/supabase/server";
@@ -8,13 +7,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase.from("profiles").select("phone, role").eq("id", user.id).single();
+  // Sin sesión solo se llega al menú (el middleware protege lo demás)
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("phone, role").eq("id", user.id).single()
+    : { data: null };
 
   return (
     <CartProvider>
-      <Header phone={profile?.phone ?? ""} isAdmin={profile?.role === "admin"} />
+      <Header phone={profile?.phone ?? ""} isAdmin={profile?.role === "admin"} guest={!user} />
       <main className="mx-auto max-w-5xl px-4 pb-10 pt-6">{children}</main>
       <footer className="mx-auto flex max-w-5xl flex-col items-center gap-3 border-t border-white/10 px-4 pb-32 pt-8 text-sm text-white/50">
         <p>Gekko Food · Pollo broaster</p>

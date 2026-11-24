@@ -1,13 +1,24 @@
+import Link from "next/link";
 import LoyaltyCard from "@/components/LoyaltyCard";
 import MenuView from "@/components/MenuView";
 import { DELIVERY_NOTE, deliveryLine, EMPTY_CARD, nextDelivery, type FoodCard, type FoodItem } from "@/lib/food";
 import { createClient } from "@/lib/supabase/server";
 
+export const metadata = {
+  title: "Menú · Pollo broaster en la Universidad ESAN",
+  description:
+    "Pecho, pierna, entrepierna y ala de pollo broaster con papa y arroz. Pide hasta las 10 a. m. y recíbelo de 12:30 a 2:00 p. m. en la Universidad ESAN. Paga con Yape.",
+  alternates: { canonical: "/menu" },
+};
+
 export default async function MenuPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const [itemsRes, cardRes] = await Promise.all([
     supabase.from("food_items").select("id, name, price, active, sort, image_url, kind").eq("active", true).order("sort"),
-    supabase.rpc("food_card"),
+    user ? supabase.rpc("food_card") : Promise.resolve({ data: null }),
   ]);
 
   const items = ((itemsRes.data ?? []) as FoodItem[]).map((i) => ({ ...i, price: Number(i.price) }));
@@ -35,7 +46,27 @@ export default async function MenuPage() {
       </section>
 
       <div className="anim-rise" style={{ ["--delay" as string]: "80ms" }}>
-        <LoyaltyCard card={card} compact />
+        {user ? (
+          <LoyaltyCard card={card} compact />
+        ) : (
+          <section className="card-lux p-5 text-center">
+            <p className="eyebrow text-gold-deep!">Cartilla de puntos</p>
+            <h2 className="font-display mt-1 text-[1.6rem] font-semibold leading-tight">
+              Cada pieza llena una bolita. Con 7, tu regalo.
+            </h2>
+            <p className="mt-2 text-sm text-ink/70">
+              Para pedir, entra con tu cuenta de Gekko o crea una gratis en un minuto.
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <Link href="/registro" className="btn btn-gold">
+                Crear cuenta
+              </Link>
+              <Link href="/login" className="btn btn-light">
+                Ya tengo cuenta
+              </Link>
+            </div>
+          </section>
+        )}
       </div>
 
       {itemsRes.error ? (

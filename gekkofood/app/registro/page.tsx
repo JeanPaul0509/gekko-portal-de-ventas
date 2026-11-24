@@ -6,7 +6,7 @@ import { useState } from "react";
 import AuthShell from "@/components/AuthShell";
 import PasswordInput from "@/components/PasswordInput";
 import { createClient } from "@/lib/supabase/client";
-import { cleanPhone, isValidPhone, phoneToEmail } from "@/lib/utils";
+import { nextPath, cleanPhone, isValidPhone, phoneToEmail } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -44,7 +44,7 @@ export default function RegisterPage() {
         "Cuenta creada, pero falta desactivar 'Confirm email' en Supabase."
       );
     }
-    router.replace("/menu");
+    router.replace(nextPath());
     router.refresh();
   }
 

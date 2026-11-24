@@ -6,7 +6,7 @@ import { useState } from "react";
 import AuthShell from "@/components/AuthShell";
 import PasswordInput from "@/components/PasswordInput";
 import { createClient } from "@/lib/supabase/client";
-import { cleanPhone, isValidPhone, phoneToEmail } from "@/lib/utils";
+import { nextPath, cleanPhone, isValidPhone, phoneToEmail } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function LoginPage() {
       return setError(
         error.message === "Invalid login credentials" ? "Celular o contraseña incorrectos." : error.message
       );
-    router.replace("/menu");
+    router.replace(nextPath());
     router.refresh();
   }
 

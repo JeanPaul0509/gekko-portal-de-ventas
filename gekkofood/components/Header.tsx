@@ -6,7 +6,7 @@ import Brand from "@/components/Brand";
 import { useCart } from "@/components/CartProvider";
 import { createClient } from "@/lib/supabase/client";
 
-export default function Header({ phone, isAdmin }: { phone: string; isAdmin: boolean }) {
+export default function Header({ phone, isAdmin, guest = false }: { phone: string; isAdmin: boolean; guest?: boolean }) {
   const router = useRouter();
   const path = usePathname();
   const { count } = useCart();
@@ -38,17 +38,37 @@ export default function Header({ phone, isAdmin }: { phone: string; isAdmin: boo
         <Brand />
         <nav className="flex flex-wrap items-center gap-0.5">
           {link("/menu", "Menú")}
-          {link("/cartilla", "Cartilla")}
-          {link("/mis-pedidos", "Pedidos")}
-          {link("/carrito", count > 0 ? `Carrito (${count})` : "Carrito")}
-          {isAdmin && link("/admin/pedidos", "Admin", "/admin")}
-          <button
-            onClick={logout}
-            title={phone ? `Sesión: ${phone}` : undefined}
-            className="rounded-lg px-2.5 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-white/45 hover:text-white"
-          >
-            Salir
-          </button>
+          {guest ? (
+            <>
+              {count > 0 && link("/carrito", `Carrito (${count})`)}
+              <Link
+                href="/login"
+                className="rounded-lg px-2.5 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-white/65 hover:text-white"
+              >
+                Entrar
+              </Link>
+              <Link
+                href="/registro"
+                className="rounded-lg bg-gold px-3 py-2 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-ink hover:brightness-105"
+              >
+                Crear cuenta
+              </Link>
+            </>
+          ) : (
+            <>
+              {link("/cartilla", "Cartilla")}
+              {link("/mis-pedidos", "Pedidos")}
+              {link("/carrito", count > 0 ? `Carrito (${count})` : "Carrito")}
+              {isAdmin && link("/admin/pedidos", "Admin", "/admin")}
+              <button
+                onClick={logout}
+                title={phone ? `Sesión: ${phone}` : undefined}
+                className="rounded-lg px-2.5 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-white/45 hover:text-white"
+              >
+                Salir
+              </button>
+            </>
+          )}
         </nav>
       </div>
     </header>

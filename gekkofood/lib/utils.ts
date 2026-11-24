@@ -44,3 +44,10 @@ export function formatDate(iso: string | null) {
   if (!iso) return "";
   return new Date(iso).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" });
 }
+
+/** A dónde ir después de entrar: el ?next= de la dirección (solo rutas internas) o el menú. */
+export function nextPath() {
+  if (typeof window === "undefined") return "/menu";
+  const n = new URLSearchParams(window.location.search).get("next");
+  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/menu";
+}
