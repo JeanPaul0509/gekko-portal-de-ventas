@@ -29,6 +29,14 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Toda redirección debe llevar las cookies de sesión recién renovadas.
+  // Si no, Supabase ya gastó el token viejo y la persona queda "botada" (sin sesión).
+  const redirectTo = (url: URL) => {
+    const r = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((c) => r.cookies.set(c));
+    return r;
+  };
+
   const path = request.nextUrl.pathname;
   const isAuthPage = AUTH_ROUTES.some((r) => path.startsWith(r));
 
@@ -36,7 +44,7 @@ export async function middleware(request: NextRequest) {
   if (path === "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/menu";
-    return NextResponse.redirect(url);
+    return redirectTo(url);
   }
   if (OPEN_ROUTES.some((r) => path.startsWith(r))) return response;
 
@@ -45,14 +53,14 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = `?next=${encodeURIComponent(path)}`;
-    return NextResponse.redirect(url);
+    return redirectTo(url);
   }
   if (user && isAuthPage) {
     const next = request.nextUrl.searchParams.get("next");
     const url = request.nextUrl.clone();
     url.pathname = next && next.startsWith("/") && !next.startsWith("//") ? next : "/menu";
     url.search = "";
-    return NextResponse.redirect(url);
+    return redirectTo(url);
   }
   return response;
 }

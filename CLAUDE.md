@@ -24,6 +24,7 @@ App web de **Gekko**: tienda de **pollo aderezado** (piezas y promos, se entrega
 
 ## Autenticación
 
+- **Middleware (las dos páginas):** toda redirección usa `redirectTo()`, que copia las cookies de sesión renovadas a la respuesta. Antes se perdían al redirigir y la persona quedaba deslogueada ("me botó") cuando el token se renovaba justo en una redirección.
 - Los campos de contraseña (login y registro, en las dos páginas) usan `components/PasswordInput.tsx`, con ojito para mostrar/ocultar. Hay una copia en `app-sorteos/` y otra en `gekkofood/`.
 - Login con celular + contraseña. Internamente cada celular es un correo `9XXXXXXXX@celular.sorteos.app` (sin el 51). En Supabase, "Confirm email" está **desactivado**.
 - El registro solo crea usuarios comunes. Admin: crear usuario en Supabase (Auth → Add user, Auto Confirm) y luego `update public.profiles set role = 'admin' where phone = '9XXXXXXXX';`.
