@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { foodStatusWhatsAppUrl, isPromoLine, REWARD_TEXT, sideLabel, statusChip, type FoodOrder, type FoodStatus } from "@/lib/food";
+import { foodStatusWhatsAppUrl, isPromoLine, REWARD_TEXT, saucesText, SAUCES, sideLabel, statusChip, type FoodOrder, type FoodStatus } from "@/lib/food";
 import { formatDate, money, num, plural } from "@/lib/utils";
 
 /** "2026-11-25" según la hora de Lima */
@@ -66,7 +66,8 @@ function OrderRow({ o, onHide }: { o: FoodOrder; onHide: (ids: string[], what: s
         <div className="min-w-0">
           <p className="font-extrabold">
             Pedido N.º {o.order_no}
-            {o.reward_choice && (
+            {saucesText(o.sauces) && <p className="mt-2 text-sm">🥫 Cremas: {saucesText(o.sauces)}</p>}
+      {o.reward_choice && (
               <span className="ml-2 inline-block rounded-full bg-brand px-2.5 py-0.5 align-middle text-[0.7rem] font-bold uppercase tracking-wider text-gold">
                 🎁 Promo
               </span>
@@ -194,6 +195,14 @@ export default function AdminOrders({ orders }: { orders: FoodOrder[] }) {
         o.food_order_items.forEach((i) => {
           const k = i.side ? `${i.name} (${sideLabel(i.side)})` : i.name;
           map.set(k, (map.get(k) ?? 0) + i.qty);
+        })
+      );
+    orders
+      .filter((o) => o.status === "paid" && o.sauces)
+      .forEach((o) =>
+        SAUCES.forEach((x) => {
+          const n = o.sauces?.[x.key] ?? 0;
+          if (n > 0) map.set(`🥫 ${x.label}`, (map.get(`🥫 ${x.label}`) ?? 0) + n);
         })
       );
     return [...map.entries()].sort((a, b) => b[1] - a[1]);

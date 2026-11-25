@@ -7,7 +7,7 @@ export default async function AdminOrdersPage() {
   const { data, error } = await supabase
     .from("food_orders")
     .select(
-      "id, order_no, user_id, buyer_name, buyer_phone, address, note, total, is_reward, reward_choice, status, created_at, food_order_items(id, name, side, price, qty)"
+      "id, order_no, user_id, buyer_name, buyer_phone, address, note, total, is_reward, reward_choice, sauces, status, created_at, food_order_items(id, name, side, price, qty)"
     )
     .eq("admin_hidden", false)
     .order("created_at", { ascending: false })

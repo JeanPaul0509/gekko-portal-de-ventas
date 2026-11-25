@@ -23,10 +23,30 @@ export type FoodOrder = {
   total: number;
   is_reward: boolean;
   reward_choice: Reward | null;
+  sauces: Sauces | null;
   status: FoodStatus;
   created_at: string;
   food_order_items: FoodOrderItem[];
 };
+
+/** Cremas gratis: máximo 1 de cada una por presa. */
+export const SAUCES = [
+  { key: "mayonesa", label: "Mayonesa" },
+  { key: "ocopa", label: "Ocopa" },
+  { key: "ketchup", label: "Ketchup" },
+  { key: "mostaza", label: "Mostaza" },
+  { key: "aji", label: "Ají" },
+] as const;
+export type SauceKey = (typeof SAUCES)[number]["key"];
+export type Sauces = Partial<Record<SauceKey, number>>;
+
+/** "Mayonesa ×2, Ají ×1" (vacío si no pidió cremas) */
+export function saucesText(s: Sauces | null | undefined) {
+  if (!s) return "";
+  return SAUCES.filter((x) => (s[x.key] ?? 0) > 0)
+    .map((x) => `${x.label} ×${s[x.key]}`)
+    .join(", ");
+}
 
 /** ¿Se puede pedir? null = sin límite. */
 export function isSoldOut(i: Pick<FoodItem, "stock">) {
@@ -166,6 +186,7 @@ export function buildFoodOrderWhatsAppUrl(opts: {
   forDay?: string;
   /** regalo de la cartilla llena */
   reward?: Reward | null;
+  sauces?: Sauces | null;
 }) {
   const text = [
     `¡Hola! 👋 Hice el pedido *N.º ${opts.orderNo}* en Gekko Food:`,
@@ -178,6 +199,7 @@ export function buildFoodOrderWhatsAppUrl(opts: {
     `📍 Entrega en ESAN (12:30 a 2:00 p. m.): ${opts.address}`,
     ...(opts.forDay ? [`🕐 Para: ${opts.forDay}`] : []),
     ...(opts.reward ? [`🎁 Promo cartilla llena: ${REWARD_TEXT[opts.reward]}`] : []),
+    ...(saucesText(opts.sauces) ? [`🥫 Cremas: ${saucesText(opts.sauces)}`] : []),
     ...(opts.note ? [`📝 Nota: ${opts.note}`] : []),
     "",
     "📎 *Adjunto captura de Yape* 👇",

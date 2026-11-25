@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { buildFoodOrderWhatsAppUrl, isPromoLine, REWARD_TEXT, sideLabel, statusChip, type FoodOrder } from "@/lib/food";
+import { buildFoodOrderWhatsAppUrl, isPromoLine, REWARD_TEXT, saucesText, sideLabel, statusChip, type FoodOrder } from "@/lib/food";
 import { formatDate, money, YAPE_NAME, YAPE_NUMBER } from "@/lib/utils";
 
 function OrderCard({ o }: { o: FoodOrder }) {
@@ -34,6 +34,7 @@ function OrderCard({ o }: { o: FoodOrder }) {
     items: o.food_order_items,
     total: o.total,
     reward: o.reward_choice,
+    sauces: o.sauces,
   });
 
   return (
@@ -42,7 +43,8 @@ function OrderCard({ o }: { o: FoodOrder }) {
         <div>
           <p className="font-extrabold">
             Pedido N.º {o.order_no}
-            {o.reward_choice && (
+            {saucesText(o.sauces) && <p className="mt-2 text-sm">🥫 Cremas: {saucesText(o.sauces)}</p>}
+      {o.reward_choice && (
               <span className="ml-2 inline-block rounded-full bg-brand px-2.5 py-0.5 align-middle text-[0.7rem] font-bold uppercase tracking-wider text-gold">
                 🎁 Promo
               </span>

@@ -6,7 +6,7 @@ import { useCart } from "@/components/CartProvider";
 import LateOrderModal from "@/components/LateOrderModal";
 import SafeImg from "@/components/SafeImg";
 import { createClient } from "@/lib/supabase/client";
-import { isSoldOut, buildFoodOrderWhatsAppUrl, deliveryLine, lateNotice, MAX_QTY, nextDelivery, sideLabel, type FoodItem, type Reward, type Side } from "@/lib/food";
+import { isSoldOut, SAUCES, type Sauces, buildFoodOrderWhatsAppUrl, deliveryLine, lateNotice, MAX_QTY, nextDelivery, sideLabel, type FoodItem, type Reward, type Side } from "@/lib/food";
 import { money, plural, YAPE_NAME, YAPE_NUMBER } from "@/lib/utils";
 
 type Done = {
@@ -20,6 +20,7 @@ type Done = {
   forDay: string;
   deliveryText: string;
   reward: Reward | null;
+  sauces: Sauces | null;
 };
 
 export default function CartView({ items, phone, promoReady }: { items: FoodItem[]; phone: string; promoReady: boolean }) {
@@ -58,6 +59,20 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
   const keyOf = (l: { itemId: string; side: string }) => `${l.itemId}|${l.side}`;
   // Unidades de un producto en todo el carrito (puede estar en 2 líneas: papa y arroz / solo arroz)
   const unitsOf = (id: string) => valid.filter((l) => l.itemId === id).reduce((a, l) => a + l.qty, 0);
+  // Cremas gratis: hasta 1 de cada una por presa (las bebidas no cuentan)
+  const [sauces, setSauces] = useState<Sauces>({});
+  const piecesCount = valid
+    .filter((l) => byId.get(l.itemId)?.kind !== "bebida")
+    .reduce((a, l) => a + l.qty, 0);
+  const sauceQty = (k: keyof Sauces) => Math.min(sauces[k] ?? 0, piecesCount);
+  function cleanSauces(): Sauces | null {
+    const out: Sauces = {};
+    SAUCES.forEach((x) => {
+      const n = sauceQty(x.key);
+      if (n > 0) out[x.key] = n;
+    });
+    return Object.keys(out).length ? out : null;
+  }
   const pieceLines = valid.filter((l) => byId.get(l.itemId)?.kind !== "bebida");
   const promoLine = pieceLines.find((l) => keyOf(l) === promoKey) ?? pieceLines[0];
   const drinks = items.filter((i) => i.kind === "bebida");
@@ -94,6 +109,7 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
       p_address: address.trim(),
       p_note: note.trim(),
       p_reward: promoReady ? reward : null,
+      p_sauces: cleanSauces(),
     });
     setLoading(false);
     if (error) {
@@ -117,6 +133,7 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
       forDay: nextDelivery().label,
       deliveryText: deliveryLine(),
       reward: promoReady ? reward : null,
+      sauces: cleanSauces(),
     };
     clear();
     setDone(result);
@@ -248,6 +265,60 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
             </div>
           );
         })}
+        {piecesCount > 0 && (
+          <div className="card p-4">
+            <p className="font-extrabold">🥫 Elige tus cremas (gratis)</p>
+            <p className="text-xs text-ink/60">
+              {piecesCount === 1
+                ? "1 de cada una para tu presa."
+                : `Hasta ${piecesCount} de cada una (1 por presa).`}
+            </p>
+            <ul className="mt-3 space-y-2">
+              {SAUCES.map((x) => {
+                const n = sauceQty(x.key);
+                return (
+                  <li key={x.key} className="flex items-center justify-between gap-3">
+                    <span className={`text-sm font-semibold ${n > 0 ? "text-ink" : "text-ink/60"}`}>{x.label}</span>
+                    {piecesCount === 1 ? (
+                      <button
+                        type="button"
+                        aria-pressed={n > 0}
+                        onClick={() => setSauces((s) => ({ ...s, [x.key]: n > 0 ? 0 : 1 }))}
+                        className={`rounded-full px-4 py-1.5 text-sm font-bold transition ${
+                          n > 0 ? "bg-brand text-gold" : "bg-paper text-ink/60"
+                        }`}
+                      >
+                        {n > 0 ? "✓ Sí" : "Agregar"}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-1 rounded-full bg-paper p-1">
+                        <button
+                          type="button"
+                          aria-label={`Quitar ${x.label}`}
+                          disabled={n === 0}
+                          onClick={() => setSauces((s) => ({ ...s, [x.key]: n - 1 }))}
+                          className="h-8 w-8 rounded-full bg-white font-bold disabled:opacity-40"
+                        >
+                          −
+                        </button>
+                        <span className="w-6 text-center text-sm font-bold">{n}</span>
+                        <button
+                          type="button"
+                          aria-label={`Agregar ${x.label}`}
+                          disabled={n >= piecesCount}
+                          onClick={() => setSauces((s) => ({ ...s, [x.key]: n + 1 }))}
+                          className="h-8 w-8 rounded-full bg-brand font-bold text-gold disabled:opacity-40"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
         <Link href="/menu" className="inline-block text-sm font-semibold text-gold underline underline-offset-4">
           ← Seguir pidiendo
         </Link>
