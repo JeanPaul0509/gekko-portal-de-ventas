@@ -6,7 +6,7 @@ import { useCart } from "@/components/CartProvider";
 import LateOrderModal from "@/components/LateOrderModal";
 import SafeImg from "@/components/SafeImg";
 import { createClient } from "@/lib/supabase/client";
-import { buildFoodOrderWhatsAppUrl, deliveryLine, lateNotice, MAX_QTY, nextDelivery, sideLabel, type FoodItem, type Reward, type Side } from "@/lib/food";
+import { isSoldOut, buildFoodOrderWhatsAppUrl, deliveryLine, lateNotice, MAX_QTY, nextDelivery, sideLabel, type FoodItem, type Reward, type Side } from "@/lib/food";
 import { money, plural, YAPE_NAME, YAPE_NUMBER } from "@/lib/utils";
 
 type Done = {
@@ -56,6 +56,8 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
   }, [ready, lines.length]);
 
   const keyOf = (l: { itemId: string; side: string }) => `${l.itemId}|${l.side}`;
+  // Unidades de un producto en todo el carrito (puede estar en 2 líneas: papa y arroz / solo arroz)
+  const unitsOf = (id: string) => valid.filter((l) => l.itemId === id).reduce((a, l) => a + l.qty, 0);
   const pieceLines = valid.filter((l) => byId.get(l.itemId)?.kind !== "bebida");
   const promoLine = pieceLines.find((l) => keyOf(l) === promoKey) ?? pieceLines[0];
   const drinks = items.filter((i) => i.kind === "bebida");
@@ -206,8 +208,13 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
                 <p className="font-extrabold [overflow-wrap:anywhere]">{it.name}</p>
                 <p className="text-sm text-ink/60">{it.kind === "bebida" ? "Bebida" : sideLabel(l.side)}</p>
                 <p className="text-sm font-bold text-violet-700">{money(it.price * l.qty)}</p>
+                {it.stock !== null && unitsOf(l.itemId) > it.stock && (
+                  <p className="text-xs font-bold text-red-700">
+                    {it.stock === 0 ? "Se agotó: quítalo del carrito." : `Solo quedan ${it.stock}.`}
+                  </p>
+                )}
               </div>
-              {it.kind !== "bebida" && drinks[0] && (
+              {it.kind !== "bebida" && drinks[0] && !isSoldOut(drinks[0]) && (
                 <button
                   type="button"
                   onClick={() => add(drinks[0].id, "sin")}
@@ -231,7 +238,7 @@ export default function CartView({ items, phone, promoReady }: { items: FoodItem
                 <button
                   type="button"
                   aria-label="Agregar uno"
-                  disabled={l.qty >= MAX_QTY}
+                  disabled={l.qty >= MAX_QTY || (it.stock !== null && unitsOf(l.itemId) >= it.stock)}
                   onClick={() => setQty(l.itemId, l.side, l.qty + 1)}
                   className="h-9 w-9 rounded-full bg-brand text-lg font-bold text-gold disabled:opacity-40"
                 >

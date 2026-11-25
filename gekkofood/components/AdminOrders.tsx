@@ -4,7 +4,27 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { foodStatusWhatsAppUrl, isPromoLine, REWARD_TEXT, sideLabel, statusChip, type FoodOrder, type FoodStatus } from "@/lib/food";
-import { formatDate, money, num } from "@/lib/utils";
+import { formatDate, money, num, plural } from "@/lib/utils";
+
+/** "2026-11-25" según la hora de Lima */
+function limaDay(iso: string) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima" }).format(new Date(iso));
+}
+
+/** "martes 25 de noviembre" (o "hoy" / "ayer") */
+function dayTitle(day: string) {
+  const today = limaDay(new Date().toISOString());
+  const yesterday = limaDay(new Date(Date.now() - 86_400_000).toISOString());
+  const nice = new Intl.DateTimeFormat("es-PE", {
+    timeZone: "UTC",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(`${day}T12:00:00Z`));
+  if (day === today) return `hoy, ${nice}`;
+  if (day === yesterday) return `ayer, ${nice}`;
+  return nice;
+}
 
 type Tab = "pending" | "paid" | "delivered" | "cancelled";
 const TABS: { key: Tab; label: string }[] = [
@@ -14,7 +34,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "cancelled", label: "Cancelados" },
 ];
 
-function OrderRow({ o }: { o: FoodOrder }) {
+function OrderRow({ o, onHide }: { o: FoodOrder; onHide: (ids: string[], what: string) => void }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -106,6 +126,11 @@ function OrderRow({ o }: { o: FoodOrder }) {
             Avisarle por WhatsApp
           </a>
         )}
+        {(o.status === "delivered" || o.status === "cancelled") && (
+          <button className="btn btn-light text-red-700" disabled={busy} onClick={() => onHide([o.id], "este pedido")}>
+            🗑 Borrar
+          </button>
+        )}
         {(o.status === "pending" || o.status === "paid") &&
           (confirmCancel ? (
             <>
@@ -129,6 +154,36 @@ function OrderRow({ o }: { o: FoodOrder }) {
 export default function AdminOrders({ orders }: { orders: FoodOrder[] }) {
   const [tab, setTab] = useState<Tab>("pending");
   const shown = orders.filter((o) => o.status === tab);
+  const canDelete = tab === "delivered" || tab === "cancelled";
+  const router = useRouter();
+  const [hiding, setHiding] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  // Pedidos agrupados por día (hora de Lima), del más reciente al más antiguo
+  const days = useMemo(() => {
+    const map = new Map<string, FoodOrder[]>();
+    shown.forEach((o) => {
+      const k = limaDay(o.created_at);
+      map.set(k, [...(map.get(k) ?? []), o]);
+    });
+    return [...map.entries()];
+  }, [shown]);
+
+  async function hide(ids: string[], what: string, strong = false) {
+    setMsg(null);
+    if (strong) {
+      const t = window.prompt(`Vas a borrar ${what} (${ids.length}). Escribe BORRAR para confirmar:`);
+      if (t?.trim().toUpperCase() !== "BORRAR") return;
+    } else if (!window.confirm(`¿Borrar ${what}? (${plural(ids.length, "pedido", "pedidos")})`)) {
+      return;
+    }
+    setHiding(true);
+    const { data, error } = await createClient().rpc("admin_hide_food_orders", { p_ids: ids });
+    setHiding(false);
+    if (error) return setMsg(error.message);
+    setMsg(`Listo: ${plural(Number(data ?? 0), "pedido borrado", "pedidos borrados")}.`);
+    router.refresh();
+  }
 
   // Lo que hay que preparar: suma de las piezas de los pedidos pagados que faltan entregar
   const prep = useMemo(() => {
@@ -178,10 +233,44 @@ export default function AdminOrders({ orders }: { orders: FoodOrder[] }) {
         </div>
       )}
 
+      {canDelete && shown.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 p-3 text-sm text-white/70">
+          <span>Borrar solo los quita de esta lista. La cartilla de los clientes no cambia.</span>
+          <button
+            className="btn btn-danger"
+            disabled={hiding}
+            onClick={() => hide(shown.map((o) => o.id), `TODOS los ${TABS.find((t) => t.key === tab)?.label.toLowerCase()}`, true)}
+          >
+            🗑 Borrar todo
+          </button>
+        </div>
+      )}
+      {msg && <p className="rounded-xl bg-white/10 p-3 text-sm text-white">{msg}</p>}
+
       {shown.length === 0 ? (
         <p className="text-center text-sm text-white/60">No hay pedidos aquí.</p>
       ) : (
-        shown.map((o) => <OrderRow key={o.id} o={o} />)
+        days.map(([day, list]) => (
+          <section key={day} className="space-y-3">
+            <div className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand/95 px-3 py-2 backdrop-blur">
+              <h2 className="font-display text-xl font-semibold capitalize text-gold">
+                {dayTitle(day)} <span className="text-sm text-white/50">· {plural(list.length, "pedido", "pedidos")}</span>
+              </h2>
+              {canDelete && (
+                <button
+                  className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700"
+                  disabled={hiding}
+                  onClick={() => hide(list.map((o) => o.id), `los pedidos del ${dayTitle(day)}`)}
+                >
+                  🗑 Borrar este día
+                </button>
+              )}
+            </div>
+            {list.map((o) => (
+              <OrderRow key={o.id} o={o} onHide={(ids, what) => hide(ids, what)} />
+            ))}
+          </section>
+        ))
       )}
     </div>
   );

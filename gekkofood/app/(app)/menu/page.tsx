@@ -17,7 +17,7 @@ export default async function MenuPage() {
     data: { user },
   } = await supabase.auth.getUser();
   const [itemsRes, cardRes] = await Promise.all([
-    supabase.from("food_items").select("id, name, price, active, sort, image_url, kind").eq("active", true).order("sort"),
+    supabase.from("food_items").select("id, name, price, active, sort, image_url, kind, stock").eq("active", true).order("sort"),
     user ? supabase.rpc("food_card") : Promise.resolve({ data: null }),
   ]);
 

@@ -8,7 +8,7 @@ export type CartSide = "papa_arroz" | "arroz" | "sin"; // "sin" = bebidas (no ll
 export type FoodKind = "pieza" | "bebida";
 export type FoodStatus = "pending" | "paid" | "delivered" | "cancelled";
 
-export type FoodItem = { id: string; name: string; price: number; active: boolean; sort: number; image_url: string | null; kind: FoodKind };
+export type FoodItem = { id: string; name: string; price: number; active: boolean; sort: number; image_url: string | null; kind: FoodKind; stock: number | null };
 export type FoodCard = { points: number; goal: number; reward_ready: boolean };
 
 export type FoodOrderItem = { id: number; name: string; side: Side | null; price: number; qty: number };
@@ -27,6 +27,11 @@ export type FoodOrder = {
   created_at: string;
   food_order_items: FoodOrderItem[];
 };
+
+/** ¿Se puede pedir? null = sin límite. */
+export function isSoldOut(i: Pick<FoodItem, "stock">) {
+  return i.stock !== null && i.stock <= 0;
+}
 
 /** Pedidos que hay que completar para ganar el regalo (el valor real lo decide la base de datos). */
 export const FOOD_GOAL = 7;

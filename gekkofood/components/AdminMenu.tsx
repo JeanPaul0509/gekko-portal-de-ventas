@@ -9,6 +9,15 @@ import { compressImage } from "@/lib/image";
 
 const BUCKET = "raffle-images"; // el mismo de Gekko; las fotos del menú van en la carpeta comida/
 
+/** "" = sin límite (null); número entero ≥ 0; undefined = inválido. */
+function parseStock(v: string): number | null | undefined {
+  const t = v.trim();
+  if (t === "") return null;
+  if (!/^\d+$/.test(t)) return undefined;
+  const n = Number(t);
+  return n <= 100000 ? n : undefined;
+}
+
 /** Sube una foto (ya comprimida) y devuelve su enlace público. */
 async function uploadPhoto(file: File): Promise<string> {
   const supabase = createClient();
@@ -92,26 +101,34 @@ function Row({ item }: { item: FoodItem }) {
   const [name, setName] = useState(item.name);
   const [price, setPrice] = useState(String(item.price));
   const [active, setActive] = useState(item.active);
+  const [stock, setStock] = useState(item.stock === null ? "" : String(item.stock));
   const [file, setFile] = useState<File | null>(null);
   const [removed, setRemoved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
   const p = Number(price.replace(",", "."));
+  const st = parseStock(stock);
   const changed =
-    name.trim() !== item.name || p !== item.price || active !== item.active || file !== null || removed;
+    name.trim() !== item.name ||
+    p !== item.price ||
+    active !== item.active ||
+    file !== null ||
+    removed ||
+    st !== item.stock;
 
   async function save() {
     setMsg(null);
     if (!name.trim()) return setMsg("Escribe un nombre.");
     if (!Number.isFinite(p) || p < 0 || p > 1000) return setMsg("Precio inválido.");
+    if (st === undefined) return setMsg("Unidades inválidas: escribe un número entero (o déjalo vacío para sin límite).");
     setBusy(true);
     try {
       let image_url: string | null = removed ? null : item.image_url;
       if (file) image_url = await uploadPhoto(file);
       const { error } = await createClient()
         .from("food_items")
-        .update({ name: name.trim(), price: p, active, image_url })
+        .update({ name: name.trim(), price: p, active, image_url, stock: st })
         .eq("id", item.id);
       if (error) throw new Error(error.message);
       setFile(null);
@@ -131,6 +148,7 @@ function Row({ item }: { item: FoodItem }) {
         <PhotoPicker current={item.image_url} file={file} onFile={setFile} removed={removed} onRemove={() => setRemoved(true)} />
         <span className="rounded-full bg-paper px-3 py-1 text-xs font-bold">
           {item.kind === "bebida" ? "🥤 Bebida" : "🍗 Pieza"}
+          {item.stock === 0 ? " · AGOTADO" : item.stock !== null ? ` · quedan ${item.stock}` : ""}
         </span>
       </div>
       <div className="flex flex-wrap items-end gap-3">
@@ -141,6 +159,16 @@ function Row({ item }: { item: FoodItem }) {
         <div className="w-28">
           <label className="mb-1 block text-xs font-medium">Precio (S/)</label>
           <input className="input" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
+        </div>
+        <div className="w-32">
+          <label className="mb-1 block text-xs font-medium">Unidades</label>
+          <input
+            className="input"
+            inputMode="numeric"
+            value={stock}
+            onChange={(e) => setStock(e.target.value)}
+            placeholder="Sin límite"
+          />
         </div>
         <label className="flex items-center gap-2 pb-3 text-sm font-semibold">
           <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
@@ -160,6 +188,7 @@ export default function AdminMenu({ items }: { items: FoodItem[] }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [kind, setKind] = useState<"pieza" | "bebida">("pieza");
+  const [newStock, setNewStock] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -170,14 +199,17 @@ export default function AdminMenu({ items }: { items: FoodItem[] }) {
     const p = Number(price.replace(",", "."));
     if (!name.trim()) return setMsg("Escribe un nombre.");
     if (!Number.isFinite(p) || p < 0 || p > 1000) return setMsg("Precio inválido.");
+    const st = parseStock(newStock);
+    if (st === undefined) return setMsg("Unidades inválidas: escribe un número entero (o déjalo vacío para sin límite).");
     setBusy(true);
     try {
       const image_url = file ? await uploadPhoto(file) : null;
       const sort = items.reduce((m, i) => Math.max(m, i.sort), 0) + 1;
-      const { error } = await createClient().from("food_items").insert({ name: name.trim(), price: p, sort, image_url, kind });
+      const { error } = await createClient().from("food_items").insert({ name: name.trim(), price: p, sort, image_url, kind, stock: st });
       if (error) throw new Error(error.message);
       setName("");
       setPrice("");
+      setNewStock("");
       setFile(null);
       router.refresh();
     } catch (e) {
@@ -190,10 +222,10 @@ export default function AdminMenu({ items }: { items: FoodItem[] }) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-white/60">
-        Sube una foto de cada pieza y toca Guardar. Para marcar una pieza como agotada, quita la marca de &quot;Visible&quot; y guarda.
+        Pon en &quot;Unidades&quot; cuántas tienes de cada producto: cada pedido descuenta y, al llegar a 0, sale &quot;Agotado&quot;. Si lo dejas vacío, no tiene límite. Si cancelas un pedido, las unidades vuelven. Para ocultar un producto, quita &quot;Visible&quot;.
       </p>
       {items.map((i) => (
-        <Row key={i.id} item={i} />
+        <Row key={`${i.id}-${i.stock}`} item={i} />
       ))}
 
       <form onSubmit={add} className="card space-y-3 p-4">
@@ -213,6 +245,16 @@ export default function AdminMenu({ items }: { items: FoodItem[] }) {
           <div className="w-28">
             <label className="mb-1 block text-xs font-medium">Precio (S/)</label>
             <input className="input" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
+          </div>
+          <div className="w-32">
+            <label className="mb-1 block text-xs font-medium">Unidades</label>
+            <input
+              className="input"
+              inputMode="numeric"
+              value={newStock}
+              onChange={(e) => setNewStock(e.target.value)}
+              placeholder="Sin límite"
+            />
           </div>
           <button className="btn btn-gold" disabled={busy}>
             {busy ? "Agregando..." : "Agregar"}

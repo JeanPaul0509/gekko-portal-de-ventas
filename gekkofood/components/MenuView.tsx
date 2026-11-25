@@ -4,16 +4,17 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import SafeImg from "@/components/SafeImg";
-import { SIDES, type CartSide, type FoodItem } from "@/lib/food";
+import { isSoldOut, SIDES, type CartSide, type FoodItem } from "@/lib/food";
 import { money, plural } from "@/lib/utils";
 
 function ItemCard({ item }: { item: FoodItem }) {
   const { add, lines } = useCart();
   const [side, setSide] = useState<CartSide>("papa_arroz");
   const inCart = lines.filter((l) => l.itemId === item.id).reduce((a, l) => a + l.qty, 0);
+  const soldOut = isSoldOut(item);
 
   return (
-    <article className="card-lux flex flex-col p-5">
+    <article className={`card-lux flex flex-col p-5 ${soldOut ? "opacity-60" : ""}`}>
       <div className="mb-4 aspect-[4/3] overflow-hidden rounded-xl bg-gold-soft">
         <SafeImg src={item.image_url} alt={item.name} icon="🍗" className="lux-img h-full w-full object-cover" />
       </div>
@@ -41,11 +42,22 @@ function ItemCard({ item }: { item: FoodItem }) {
       <hr className="gold-rule my-4" />
       <div className="mt-auto flex items-center justify-between gap-3">
         <p className="text-[1.6rem] font-extrabold tracking-tight text-violet-700">{money(item.price)}</p>
-        <button type="button" className="btn btn-primary" onClick={() => add(item.id, side)}>
-          Agregar
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={soldOut || (item.stock !== null && inCart >= item.stock)}
+          onClick={() => add(item.id, side)}
+        >
+          {soldOut ? "Agotado" : "Agregar"}
         </button>
       </div>
       {inCart > 0 && <p className="mt-2 text-xs font-semibold text-gold-deep">{plural(inCart, "unidad", "unidades")} en tu carrito</p>}
+      {soldOut ? (
+        <p className="mt-2 text-xs font-bold text-red-700">Agotado por hoy. Vuelve pronto 🙌</p>
+      ) : (
+        item.stock !== null &&
+        item.stock <= 5 && <p className="mt-2 text-xs font-bold text-red-700">¡Quedan {item.stock}!</p>
+      )}
     </article>
   );
 }
@@ -63,8 +75,13 @@ function DrinkCard({ item }: { item: FoodItem }) {
         <p className="text-lg font-extrabold text-violet-700">{money(item.price)}</p>
         {inCart > 0 && <p className="text-xs font-semibold text-gold-deep">{plural(inCart, "unidad", "unidades")} en tu carrito</p>}
       </div>
-      <button type="button" className="btn btn-primary" onClick={() => add(item.id, "sin")}>
-        Agregar
+      <button
+        type="button"
+        className="btn btn-primary"
+        disabled={isSoldOut(item) || (item.stock !== null && inCart >= item.stock)}
+        onClick={() => add(item.id, "sin")}
+      >
+        {isSoldOut(item) ? "Agotado" : "Agregar"}
       </button>
     </article>
   );
